@@ -88,3 +88,30 @@ main {
   50% { text-shadow: 0 0 25px rgba(163,102,255,1); }
   100% { text-shadow: 0 0 10px rgba(163,102,255,0.5); }
 }
+body {
+  margin: 0;
+  font-family: 'EB Garamond', serif;
+  background: radial-gradient(circle at center, #1b0033, #0a0014);
+  background-size: 300% 300%;
+  animation: bgFlow 25s ease infinite;
+  color: #f0f0f0;
+  line-height: 1.6;
+}
+
+@keyframes bgFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Texte qui pulse */
+h1, h2, h3 {
+  font-family: 'Cinzel Decorative', serif;
+  text-shadow: 0 0 15px rgba(163, 102, 255, 0.4);
+  animation: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 10px rgba(163, 102, 255, 0.3); }
+  to   { text-shadow: 0 0 20px rgba(163, 102, 255, 0.7); }
+}
