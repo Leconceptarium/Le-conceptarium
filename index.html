@@ -8,10 +8,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="overlay"></div>
+  <div id="intro">
+    <div class="intro-text">✨ Le Conceptarium ✨<br><span>Ouvrez les portes de l’imaginaire</span></div>
+  </div>
+
   <header>
-    <h1>✨ Le Conceptarium</h1>
-    <p>L’expérience ultime commence ici</p>
+    <h1>Le Conceptarium</h1>
     <nav>
       <a href="index.html">Accueil</a>
       <a href="projets.html">Projets</a>
@@ -21,10 +23,19 @@
   </header>
 
   <main>
-    <section>
-      <h2>Bienvenue dans le monde du Conceptarium</h2>
-      <p>Créateur d’expériences immersives, de scénarios sur mesure et d’aventures mémorables.</p>
+    <section class="hero">
+      <h2>Créateur d’expériences immersives</h2>
+      <p>Scénarios, univers visuels, jeux narratifs, mystères... <br>Chaque projet est une passerelle vers un autre monde.</p>
     </section>
   </main>
+
+  <footer>
+    <p>© 2025 Le Conceptarium</p>
+  </footer>
+
+  <script>
+    const intro = document.getElementById("intro");
+    setTimeout(() => { intro.classList.add("fade-out"); }, 2000);
+  </script>
 </body>
 </html>
