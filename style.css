@@ -1,117 +1,95 @@
 
 body {
   margin: 0;
-  font-family: 'Georgia', serif;
+  padding: 0;
+  font-family: 'EB Garamond', serif;
   color: #f0f0f0;
-  background: linear-gradient(120deg, #0a0014, #1a0033);
+  background-color: #0a0014;
+  background-image: linear-gradient(120deg, #1c0f2c, #0a0014);
   background-size: 400% 400%;
-  animation: animateBackground 20s ease infinite;
+  animation: bgGradient 20s ease infinite;
+  scroll-behavior: smooth;
 }
 
-@keyframes animateBackground {
+@keyframes bgGradient {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-.overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('https://www.transparenttextures.com/patterns/dark-mosaic.png');
-  opacity: 0.08;
-  z-index: 0;
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5em 2em;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-header {
-  text-align: center;
-  padding: 4em 1em;
-  background-color: rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 1;
-}
-
-h1 {
-  font-size: 3em;
-  margin-bottom: 0.2em;
+.logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.8em;
+  color: #a366ff;
 }
 
 nav a {
-  color: #f0f0f0;
+  margin-left: 20px;
   text-decoration: none;
-  margin: 0 15px;
   font-weight: bold;
+  color: #f0f0f0;
+  transition: color 0.3s;
 }
 
-main {
-  padding: 3em 2em;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
-/* Intro animée */
-#intro {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: #0b0015;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  transition: opacity 1.5s ease;
-}
-
-#intro.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.intro-text {
-  text-align: center;
+nav a:hover {
   color: #a366ff;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 2em;
-  line-height: 1.5;
-  animation: pulse 2s ease-in-out infinite;
 }
 
-.intro-text span {
-  font-size: 0.6em;
-  color: #ddd;
-  display: block;
+.hero-section {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2em;
+}
+
+.hero-text h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.8em;
+  color: #ffffff;
+  margin-bottom: 0.5em;
+  text-shadow: 0 0 10px rgba(163, 102, 255, 0.3);
+  animation: pulse 4s infinite alternate;
+}
+
+.hero-text p {
+  font-size: 1.2em;
+  color: #ccc;
+  margin-bottom: 2em;
+}
+
+.cta-button {
+  background: #a366ff;
+  color: #fff;
+  padding: 0.8em 1.5em;
+  border: none;
+  text-decoration: none;
+  border-radius: 30px;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.cta-button:hover {
+  background: #c299ff;
+}
+
+footer {
+  text-align: center;
+  padding: 2em;
+  font-size: 0.9em;
+  color: #888;
 }
 
 @keyframes pulse {
-  0% { text-shadow: 0 0 10px rgba(163,102,255,0.5); }
-  50% { text-shadow: 0 0 25px rgba(163,102,255,1); }
-  100% { text-shadow: 0 0 10px rgba(163,102,255,0.5); }
-}
-body {
-  margin: 0;
-  font-family: 'EB Garamond', serif;
-  background: radial-gradient(circle at center, #1b0033, #0a0014);
-  background-size: 300% 300%;
-  animation: bgFlow 25s ease infinite;
-  color: #f0f0f0;
-  line-height: 1.6;
-}
-
-@keyframes bgFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Texte qui pulse */
-h1, h2, h3 {
-  font-family: 'Cinzel Decorative', serif;
-  text-shadow: 0 0 15px rgba(163, 102, 255, 0.4);
-  animation: glow 3s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from { text-shadow: 0 0 10px rgba(163, 102, 255, 0.3); }
-  to   { text-shadow: 0 0 20px rgba(163, 102, 255, 0.7); }
+  0% { text-shadow: 0 0 8px rgba(163, 102, 255, 0.2); }
+  100% { text-shadow: 0 0 20px rgba(163, 102, 255, 0.6); }
 }
