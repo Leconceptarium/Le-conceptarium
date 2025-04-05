@@ -8,17 +8,23 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  
   <header class="navbar">
     <div class="logo">Le Conceptarium</div>
+    <div class="burger">
+      <div></div><div></div><div></div>
+    </div>
     <nav>
       <a href="index.html">Accueil</a>
       <a href="projets.html">Projets</a>
       <a href="prestations.html">Prestations</a>
+      <a href="galerie.html">Galerie</a>
+      <a href="a-propos.html">À propos</a>
       <a href="contact.html">Contact</a>
       <a href="blog.html">Blog</a>
-      <a href="a-propos.html" class="active">À propos</a>
     </nav>
   </header>
+
 
   <main>
     <h1>À propos</h1>
@@ -40,5 +46,16 @@
   <footer>
     <p>© 2025 Le Conceptarium – Tous droits réservés</p>
   </footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const burger = document.querySelector(".burger");
+    const nav = document.querySelector(".navbar nav");
+    burger.addEventListener("click", () => {
+      nav.classList.toggle("active");
+    });
+  });
+</script>
+
 </body>
 </html>
