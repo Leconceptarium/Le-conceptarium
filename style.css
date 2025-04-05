@@ -1,12 +1,11 @@
 
-/* Typo */
 body {
   margin: 0;
   font-family: 'EB Garamond', serif;
-  background: linear-gradient(135deg, #11001c, #1e0033);
-  color: #f0f0f0;
-  background-size: 400% 400%;
+  background: linear-gradient(120deg, #160024, #23003c, #160024);
+  background-size: 300% 300%;
   animation: bgFlow 40s ease infinite;
+  color: #f0f0f0;
   line-height: 1.6;
   scroll-behavior: smooth;
 }
@@ -20,12 +19,12 @@ body {
 h1, h2, h3 {
   font-family: 'Cinzel Decorative', serif;
   text-align: center;
-  animation: glow 4s ease-in-out infinite alternate;
+  animation: glow 3s ease-in-out infinite alternate;
 }
 
 @keyframes glow {
   from { text-shadow: 0 0 10px rgba(163, 102, 255, 0.3); }
-  to   { text-shadow: 0 0 25px rgba(163, 102, 255, 0.6); }
+  to   { text-shadow: 0 0 20px rgba(163, 102, 255, 0.7); }
 }
 
 a {
@@ -37,20 +36,26 @@ a:hover {
   color: #d1b3ff;
 }
 
-/* Nav */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.2em 2em;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
 }
 .navbar nav a {
   margin-left: 1.2em;
   font-weight: bold;
 }
 
-/* Layout */
+.logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.4em;
+  color: #f0f0f0;
+  margin-left: auto;
+  order: 2;
+}
+
 main {
   max-width: 900px;
   margin: 0 auto;
@@ -64,17 +69,20 @@ footer {
   color: #aaa;
 }
 
-/* Sections */
 section {
   margin: 3em 0;
-  animation: fadeIn 1.4s ease both;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 1.2s ease forwards;
 }
 
-/* Boutons */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .cta-button {
   display: inline-block;
   padding: 0.8em 1.5em;

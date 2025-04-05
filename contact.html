@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,10 +6,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact – Le Conceptarium</title>
   <link rel="stylesheet" href="style.css" />
-</head>
-<body class="page-contact">
+  <style>
+    .contact-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2em;
+      margin-top: 2em;
+    }
 
-  <header>
+    .contact-form, .contact-infos {
+      flex: 1 1 45%;
+      min-width: 280px;
+    }
+
+    .contact-form form {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+
+    .contact-form input, .contact-form textarea, .contact-form select {
+      padding: 0.8em;
+      border-radius: 5px;
+      border: none;
+      font-size: 1em;
+    }
+
+    .contact-form button {
+      background: #a366ff;
+      color: white;
+      padding: 1em;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .contact-form button:hover {
+      background: #c299ff;
+    }
+
+    .contact-infos {
+      font-size: 1em;
+      line-height: 1.8;
+    }
+
+    .contact-infos a {
+      color: #d1b3ff;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Le Conceptarium</div>
     <nav>
       <a href="index.html">Accueil</a>
       <a href="projets.html">Projets</a>
@@ -18,36 +69,62 @@
     </nav>
   </header>
 
-  <main class="contact-section">
-    <h1 class="pulse">Prenons contact</h1>
-    <p class="intro">Une idée, un projet, une envie de franchir les portes de l’imaginaire ? Laisse un message, et faisons naître l’impossible.</p>
+  <main>
+    <h1 class="pulse">Un projet ? Une idée ? Parlons-en.</h1>
+    <p style="text-align:center;">Frappez à la porte du Conceptarium et partagez vos envies de mondes à créer.</p>
 
-    <form onsubmit="sendMail(event)" class="contact-form">
-  <label>Nom :
-    <input type="text" id="nom" required />
-  </label>
+    <div class="contact-container">
+      <div class="contact-form">
+        <form onsubmit="sendMail(event)">
+          <label>Nom :
+            <input type="text" id="nom" required />
+          </label>
 
-  <label>Email :
-    <input type="email" id="email" required />
-  </label>
+          <label>Email :
+            <input type="email" id="email" required />
+          </label>
 
-  <label>Message :
-    <textarea id="message" rows="6" required></textarea>
-  </label>
+          <label>Objet :
+            <select id="sujet" required>
+              <option value="">Choisir un sujet</option>
+              <option value="Collaboration">Collaboration</option>
+              <option value="Devis">Demande de devis</option>
+              <option value="Création de scénario">Création de scénario</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </label>
 
-  <button type="submit">Envoyer le message</button>
-</form>
+          <label>Message :
+            <textarea id="message" rows="6" required></textarea>
+          </label>
 
-<script>
-  function sendMail(event) {
-    event.preventDefault();
-    const nom = document.getElementById("nom").value;
-    const email = document.getElementById("email").value;
-    const message = document.getElementById("message").value;
+          <button type="submit">Envoyer</button>
+        </form>
+      </div>
 
-    const subject = encodeURIComponent("Message depuis le site Le Conceptarium");
-    const body = encodeURIComponent(`Nom : ${nom}\nEmail : ${email}\n\n${message}`);
+      <div class="contact-infos">
+        <p><strong>Email :</strong><br><a href="mailto:leconceptarium@gmail.com">leconceptarium@gmail.com</a></p>
+        <p><strong>Instagram :</strong><br><a href="https://www.instagram.com/leconceptarium" target="_blank">@leconceptarium</a></p>
+        <p><strong>Disponibilité :</strong><br>Lun. – Ven. : 10h à 18h</p>
+      </div>
+    </div>
 
-    window.location.href = `mailto:leconceptarium@gmail.com?subject=${subject}&body=${body}`;
-  }
-</script>
+    <script>
+      function sendMail(event) {
+        event.preventDefault();
+        const nom = document.getElementById("nom").value;
+        const email = document.getElementById("email").value;
+        const sujet = document.getElementById("sujet").value;
+        const message = document.getElementById("message").value;
+        const subject = encodeURIComponent("Contact – " + sujet);
+        const body = encodeURIComponent(`Nom : ${nom}\nEmail : ${email}\n\n${message}`);
+        window.location.href = `mailto:leconceptarium@gmail.com?subject=${subject}&body=${body}`;
+      }
+    </script>
+  </main>
+
+  <footer>
+    <p>© 2025 Le Conceptarium – Tous droits réservés</p>
+  </footer>
+</body>
+</html>
