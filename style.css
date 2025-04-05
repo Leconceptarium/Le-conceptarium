@@ -95,3 +95,60 @@ section {
 .cta-button:hover {
   background: #c299ff;
 }
+
+
+/* MENU BURGER */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2em 2em;
+  background: rgba(0,0,0,0.4);
+  position: relative;
+  z-index: 10;
+}
+
+.navbar nav {
+  display: flex;
+  gap: 1.2em;
+}
+
+.burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.burger div {
+  width: 25px;
+  height: 3px;
+  background-color: #fff;
+  border-radius: 3px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .burger {
+    display: flex;
+  }
+
+  .navbar nav {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 1em;
+    display: none;
+  }
+
+  .navbar nav.active {
+    display: flex;
+  }
+
+  .navbar nav a {
+    margin: 0.5em 0;
+  }
+}
