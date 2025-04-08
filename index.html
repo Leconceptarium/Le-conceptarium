@@ -1,15 +1,114 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="google-site-verification" content="YYwOzsP2Bun8THqrx_hRLp8KAlbE310rzNaqvHFqJvI" />
   <title>Le Conceptarium</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative&family=EB+Garamond&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      z-index: 2;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3.5em;
+      letter-spacing: 1px;
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #a366ff; }
+      to   { text-shadow: 0 0 25px #d9b3ff; }
+    }
+
+    .cta-button {
+      margin-top: 1.5em;
+      padding: 0.7em 1.5em;
+      background: #a366ff;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-button:hover {
+      transform: scale(1.1);
+    }
+
+    .cursor {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      position: fixed;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+    }
+
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .burger div {
+      width: 25px;
+      height: 3px;
+      background-color: #fff;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .burger {
+        display: flex;
+      }
+
+      .navbar nav {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.9);
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 1em;
+        display: none;
+      }
+
+      .navbar nav.active {
+        display: flex;
+      }
+
+      .navbar nav a {
+        margin: 0.5em 0;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="cursor" id="cursor"></div>
+  <canvas id="bg"></canvas>
+
   <header class="navbar">
     <div class="logo">Le Conceptarium</div>
     <div class="burger">
@@ -27,48 +126,60 @@
   </header>
 
   <main>
-    <h1>Le Conceptarium</h1>
-    <p style="text-align:center; max-width:700px; margin: 0 auto;">
-      Le Conceptarium est un atelier de création de mondes, de récits et d’expériences interactives.
-      Que ce soit pour un escape game, une enquête ou une aventure à emporter, chaque projet est une invitation à franchir les portes de l’imaginaire.
-    </p>
-    <div style="text-align:center; margin-top:2em;">
-      <a href="projets.html" class="cta-button">Découvrir nos projets</a>
-    </div>
+    <h1>Entrez dans l’imaginaire</h1>
+    <a href="projets.html" class="cta-button">Explorer les mondes</a>
   </main>
 
   <footer>
     <p>© 2025 Le Conceptarium – Tous droits réservés</p>
   </footer>
-  
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const burger = document.querySelector(".burger");
-    const nav = document.querySelector(".navbar nav");
-    burger.addEventListener("click", () => {
-      nav.classList.toggle("active");
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const canvas = document.getElementById('bg');
+      const ctx = canvas.getContext('2d');
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+
+      let particles = [];
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 2 + 1,
+          dx: (Math.random() - 0.5) * 0.5,
+          dy: (Math.random() - 0.5) * 0.5,
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = '#a366ff44';
+          ctx.fill();
+          p.x += p.dx;
+          p.y += p.dy;
+          if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      const cursor = document.getElementById('cursor');
+      document.addEventListener('mousemove', e => {
+        cursor.style.left = e.pageX + 'px';
+        cursor.style.top = e.pageY + 'px';
+      });
+
+      const burger = document.querySelector(".burger");
+      const nav = document.querySelector(".navbar nav");
+      burger.addEventListener("click", () => {
+        nav.classList.toggle("active");
+      });
     });
-  });
-</script>
-<div class="background">
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-</div>
+  </script>
 </body>
 </html>
