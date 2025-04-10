@@ -57,7 +57,6 @@
     let waveDelay = false;
     let countdownValue = 3;
     let isDead = false;
-    let maxFragments = 15;
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
@@ -148,18 +147,10 @@
     let fragments = [];
 
     function spawnFragments(n, traps = 0.1, power = false) {
-      maxFragments = n;
-      fragments = [];
-let spawned = 0;
-let interval = setInterval(() => {
-  let type = Math.random() < traps ? "trap" : "normal";
-  fragments.push(new Fragment(type));
-  spawned++;
-  if (spawned >= n) {
-    if (power) fragments.push(new Fragment("power"));
-    clearInterval(interval);
-  }
-}, 30); // un fragment toutes les 30ms
+      for (let i = 0; i < n; i++) {
+        let type = Math.random() < traps ? "trap" : "normal";
+        fragments.push(new Fragment(type));
+      }
       if (power) fragments.push(new Fragment("power"));
     }
 
@@ -182,6 +173,7 @@ let interval = setInterval(() => {
       const t = document.getElementById("transition");
       const text = document.getElementById("countdown-text");
       t.style.display = "flex";
+      fragments = [];
       bots = [];
       countdownValue = 3;
       waveDelay = true;
@@ -208,20 +200,20 @@ let interval = setInterval(() => {
             switch (waveNum) {
               case 2:
                 bots = spawnBots(6);
-                spawnFragments(15, 0.2);
+                spawnFragments(15, 0.05); // identique à vague 1
                 break;
               case 3:
                 bots = spawnBots(7);
                 bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 22, "#ffffff", true, "Le Veilleur", true));
-                spawnFragments(15, 0.3);
+                spawnFragments(15, 0.05);
                 break;
               case 4:
                 bots = spawnBots(10);
-                spawnFragments(15, 0.35, true);
+                spawnFragments(20, 0.3, true);
                 break;
               case 5:
                 bots = spawnBots(12);
-                spawnFragments(15, 0.4);
+                spawnFragments(25, 0.4, true);
                 break;
             }
           }
@@ -264,7 +256,7 @@ let interval = setInterval(() => {
                 e.score++;
                 e.radius += 0.6;
               }
-              if (fragments.filter(f => !f.collected).length < maxFragments) {
+              if (fragments.filter(f => !f.collected).length < 100) {
                 fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
               }
             }
