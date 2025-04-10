@@ -39,18 +39,24 @@
 
     let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
 
+    const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis"];
+    const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66"];
+
     class Entity {
-      constructor(x, y, radius, color, isBot = false) {
+      constructor(x, y, radius, color, isBot = false, name = "") {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.color = color;
         this.score = 0;
         this.isBot = isBot;
+        this.name = name;
         this.target = null;
+        this.alive = true;
       }
 
       update() {
+        if (!this.alive) return;
         if (!this.isBot) {
           this.x += (mouse.x - this.x) * 0.07;
           this.y += (mouse.y - this.y) * 0.07;
@@ -63,14 +69,15 @@
             let dy = this.target.y - this.y;
             let dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 1) {
-              this.x += (dx / dist) * 1.2;
-              this.y += (dy / dist) * 1.2;
+              this.x += (dx / dist) * 1.8;
+              this.y += (dy / dist) * 1.8;
             }
           }
         }
       }
 
       draw() {
+        if (!this.alive) return;
         ctx.beginPath();
         let gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, this.radius);
         gradient.addColorStop(0, "#ffffff");
@@ -78,6 +85,13 @@
         ctx.fillStyle = gradient;
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        if (this.isBot) {
+          ctx.fillStyle = "white";
+          ctx.font = "14px EB Garamond";
+          ctx.textAlign = "center";
+          ctx.fillText(this.name, this.x, this.y - this.radius - 10);
+        }
       }
     }
 
@@ -99,16 +113,25 @@
       }
     }
 
-    const player = new Entity(canvas.width / 2, canvas.height / 2, 15, "#a366ff", false);
-    const bots = [
-      new Entity(100, 100, 15, "#7754cc", true),
-      new Entity(canvas.width - 100, canvas.height - 100, 15, "#7754cc", true)
-    ];
-    const fragments = Array.from({ length: 25 }, () => new Fragment());
+    const player = new Entity(canvas.width / 2, canvas.height / 2, 15, "#a366ff", false, "Toi");
+    const bots = botNames.map((name, i) => new Entity(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      15,
+      botColors[i % botColors.length],
+      true,
+      name
+    ));
+
+    let fragments = Array.from({ length: 25 }, () => new Fragment());
+
+    function spawnFragment() {
+      fragments.push(new Fragment());
+    }
 
     function updateUI() {
       document.getElementById("ui").innerText =
-        "Fragments : " + player.score + " | Bots : " + bots.reduce((sum, b) => sum + b.score, 0);
+        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
     }
 
     function gameLoop() {
@@ -118,8 +141,9 @@
       [...bots, player].forEach(e => {
         e.update();
         e.draw();
+
         fragments.forEach(f => {
-          if (!f.collected) {
+          if (!f.collected && e.alive) {
             const dx = e.x - f.x;
             const dy = e.y - f.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -127,9 +151,20 @@
               f.collected = true;
               e.score++;
               e.radius += 0.6;
+              spawnFragment();
             }
           }
         });
+
+        if (!e.isBot || !e.alive) return;
+        const dx = player.x - e.x;
+        const dy = player.y - e.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < player.radius && player.radius > e.radius + 5 && e.alive) {
+          e.alive = false;
+          player.score += e.score;
+          player.radius += e.radius / 2;
+        }
       });
 
       fragments.forEach(f => f.draw());
