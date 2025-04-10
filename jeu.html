@@ -57,6 +57,7 @@
     let waveDelay = false;
     let countdownValue = 3;
     let isDead = false;
+    let maxFragments = 15;
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
@@ -144,8 +145,11 @@
 
     const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
     let bots = [];
-    let fragments = []
-        function spawnFragments(n, traps = 0.1, power = false) {
+    let fragments = [];
+
+    function spawnFragments(n, traps = 0.1, power = false) {
+      maxFragments = n;
+      fragments = [];
       for (let i = 0; i < n; i++) {
         let type = Math.random() < traps ? "trap" : "normal";
         fragments.push(new Fragment(type));
@@ -168,13 +172,10 @@
       return arr;
     }
 
-        function triggerNextWave(waveNum) {
+    function triggerNextWave(waveNum) {
       const t = document.getElementById("transition");
       const text = document.getElementById("countdown-text");
       t.style.display = "flex";
-
-      // Réinitialisation correcte à chaque vague
-      fragments = [];
       bots = [];
       countdownValue = 3;
       waveDelay = true;
@@ -187,7 +188,6 @@
       };
 
       text.innerText = messages[waveNum] || "";
-
       setTimeout(() => {
         const countdown = setInterval(() => {
           text.innerText = countdownValue > 0 ? countdownValue : "GO !";
@@ -258,9 +258,9 @@
                 e.score++;
                 e.radius += 0.6;
               }
-              if (fragments.filter(f => !f.collected).length < 100) {
-  fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
-}
+              if (fragments.filter(f => !f.collected).length < maxFragments) {
+                fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
+              }
             }
           }
         });
