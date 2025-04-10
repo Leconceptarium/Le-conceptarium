@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>L’Ombre du Rêveur</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #0d0b1f;
+      overflow: hidden;
+      font-family: 'EB Garamond', serif;
+      color: white;
+    }
 
+    canvas {
+      display: block;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 1.2em;
+      background: rgba(0,0,0,0.5);
+      padding: 0.5em 1em;
+      border-radius: 10px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Fragments : 0</div>
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+    let score = 0;
+
+    class Player {
+      constructor() {
+        this.x = canvas.width / 2;
+        this.y = canvas.height / 2;
+        this.radius = 15;
+      }
+      update() {
+        this.x += (mouse.x - this.x) * 0.1;
+        this.y += (mouse.y - this.y) * 0.1;
+      }
+      draw() {
+        ctx.beginPath();
+        let gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, this.radius);
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(1, "#a366ff");
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    class Fragment {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = 8 + Math.random() * 4;
+        this.collected = false;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.fillStyle = "#d9b3ff";
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const player = new Player();
+    const fragments = [];
+
+    for (let i = 0; i < 20; i++) {
+      fragments.push(new Fragment());
+    }
+
+    function draw() {
+      ctx.fillStyle = "rgba(13,11,31,0.3)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      player.update();
+      player.draw();
+
+      fragments.forEach(f => {
+        if (!f.collected) {
+          f.draw();
+          const dx = player.x - f.x;
+          const dy = player.y - f.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < player.radius + f.radius) {
+            f.collected = true;
+            score++;
+            document.getElementById("score").innerText = "Fragments : " + score;
+          }
+        }
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    canvas.addEventListener("mousemove", e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    canvas.addEventListener("touchmove", e => {
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    }, { passive: false });
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
