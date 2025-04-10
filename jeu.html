@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>L’Ombre du Rêveur – Niveau 2</title>
+  <title>L’Ombre du Rêveur – Fragments Piégés</title>
   <style>
     html, body {
       margin: 0;
@@ -113,26 +113,40 @@
     }
 
     class Fragment {
-      constructor() {
+      constructor(isTrap = false) {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.radius = 8 + Math.random() * 3;
         this.collected = false;
+        this.isTrap = isTrap;
       }
 
       draw() {
         if (!this.collected) {
           ctx.beginPath();
-          ctx.fillStyle = "#d9b3ff";
+          ctx.fillStyle = this.isTrap ? "#ff3333" : "#d9b3ff";
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
           ctx.fill();
         }
       }
     }
 
-    const player = new Entity(canvas.width / 2, canvas.height / 2, 15, "#a366ff", false, "Toi");
+    const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
     let bots = spawnBots(5);
-    let fragments = Array.from({ length: 25 }, () => new Fragment());
+    let fragments = spawnInitialFragments(15);
+
+    function spawnInitialFragments(n) {
+      return Array.from({ length: n }, () => new Fragment(Math.random() < 0.2));
+    }
+
+    function spawnFragment() {
+      fragments.push(new Fragment(Math.random() < 0.2));
+    }
+
+    function updateUI() {
+      document.getElementById("ui").innerText =
+        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
+    }
 
     function spawnBots(n) {
       const arr = [];
@@ -149,21 +163,13 @@
       return arr;
     }
 
-    function spawnFragment() {
-      fragments.push(new Fragment());
-    }
-
-    function updateUI() {
-      document.getElementById("ui").innerText =
-        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
-    }
-
     function triggerNextWave() {
       const t = document.getElementById("transition");
       t.style.display = "flex";
       setTimeout(() => {
         t.style.display = "none";
         level = 2;
+        player.radius = 10;
         bots = spawnBots(8);
       }, 3000);
     }
@@ -183,8 +189,12 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < e.radius + f.radius) {
               f.collected = true;
-              e.score++;
-              e.radius += 0.6;
+              if (f.isTrap) {
+                e.radius = Math.max(5, e.radius / 2);
+              } else {
+                e.score++;
+                e.radius += 0.6;
+              }
               spawnFragment();
             }
           }
