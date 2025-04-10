@@ -33,6 +33,44 @@
       display: block;
     }
   </style>
+  <style>
+  .carousel-container {
+    position: relative;
+    max-width: 400px;
+  }
+
+  .carousel-image {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    display: none;
+  }
+
+  .carousel-image.active {
+    display: block;
+  }
+
+  .carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 2em;
+    padding: 0.2em 0.5em;
+    border-radius: 5px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .carousel-arrow.left {
+    left: 10px;
+  }
+
+  .carousel-arrow.right {
+    right: 10px;
+  }
+</style>
 </head>
 <body>
   
@@ -60,6 +98,8 @@
       <h2>LA MALÉDICTION DE MONSIEUR BRISEBARD</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
         <div class="carousel-container">
+          <span class="carousel-arrow left">&#10094;</span>
+  <span class="carousel-arrow right">&#10095;</span>
           <img src="brisebard.PNG" class="carousel-image active" alt="Brisebard 1">
           <img src="IMG_6242.jpeg" class="carousel-image" alt="Brisebard 2">
           <img src="IMG_6240.jpeg" class="carousel-image" alt="Brisebard 3">
@@ -76,6 +116,8 @@
       <h2>DESTINY BOX : Le Secret de la Lanterne</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
         <div class="carousel-container">
+          <span class="carousel-arrow left">&#10094;</span>
+  <span class="carousel-arrow right">&#10095;</span>
           <img src="destiny.PNG" class="carousel-image active" alt="Destiny Box 1">
           <img src="IMG_6246.jpeg" class="carousel-image" alt="Destiny Box 2">
           <img src="IMG_6249.jpeg" class="carousel-image" alt="Destiny Box 3">
@@ -92,6 +134,8 @@
       <h2>CYBER BOX</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
         <div class="carousel-container">
+          <span class="carousel-arrow left">&#10094;</span>
+  <span class="carousel-arrow right">&#10095;</span>
           <img src="IMG_9118.jpeg" class="carousel-image active" alt="Cyber Box 1">
           <img src="cyber2.jpg" class="carousel-image" alt="Cyber Box 2">
           <img src="cyber3.jpg" class="carousel-image" alt="Cyber Box 3">
@@ -110,28 +154,40 @@
     <p>© 2025 Le Conceptarium – Tous droits réservés</p>
   </footer>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const burger = document.querySelector(".burger");
-      const nav = document.querySelector(".navbar nav");
-      burger.addEventListener("click", () => {
-        nav.classList.toggle("active");
+    <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const burger = document.querySelector(".burger");
+    const nav = document.querySelector(".navbar nav");
+    burger.addEventListener("click", () => {
+      nav.classList.toggle("active");
+    });
+
+    document.querySelectorAll('.carousel-container').forEach(container => {
+      const images = container.querySelectorAll('.carousel-image');
+      const left = container.querySelector('.carousel-arrow.left');
+      const right = container.querySelector('.carousel-arrow.right');
+      let index = 0;
+
+      function showImage(i) {
+        images.forEach(img => img.classList.remove('active'));
+        images[i].classList.add('active');
+      }
+
+      left.addEventListener('click', e => {
+        e.stopPropagation();
+        index = (index - 1 + images.length) % images.length;
+        showImage(index);
       });
 
-      const carousels = document.querySelectorAll(".carousel-container");
-      carousels.forEach(container => {
-        let index = 0;
-        const images = container.querySelectorAll(".carousel-image");
-        if (images.length) {
-          images[0].classList.add("active");
-          container.addEventListener("click", () => {
-            images[index].classList.remove("active");
-            index = (index + 1) % images.length;
-            images[index].classList.add("active");
-          });
-        }
+      right.addEventListener('click', e => {
+        e.stopPropagation();
+        index = (index + 1) % images.length;
+        showImage(index);
       });
+
+      showImage(index);
     });
-  </script>
+  });
+</script>
 </body>
 </html>
