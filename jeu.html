@@ -54,7 +54,89 @@
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
-        const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
+
+    class Entity {
+      constructor(x, y, radius, color, isBot = false, name = "", isVeilleur = false) {
+        this.x = x; this.y = y;
+        this.radius = radius;
+        this.color = color;
+        this.score = 0;
+        this.isBot = isBot;
+        this.name = name;
+        this.target = null;
+        this.alive = true;
+        this.speed = isBot ? (wave === 1 ? 1.8 : 2.6) : 0;
+        this.isVeilleur = isVeilleur;
+      }
+
+      update() {
+        if (!this.alive) return;
+        if (!this.isBot) {
+          this.x += (mouse.x - this.x) * 0.07;
+          this.y += (mouse.y - this.y) * 0.07;
+        } else if (this.isVeilleur) {
+          let dx = player.x - this.x;
+          let dy = player.y - this.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 1) {
+            this.x += (dx / dist) * this.speed * 1.4;
+            this.y += (dy / dist) * this.speed * 1.4;
+          }
+        } else {
+          if (!this.target || this.target.collected) {
+            this.target = fragments[Math.floor(Math.random() * fragments.length)];
+          }
+          if (this.target) {
+            let dx = this.target.x - this.x;
+            let dy = this.target.y - this.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 1) {
+              this.x += (dx / dist) * this.speed;
+              this.y += (dy / dist) * this.speed;
+            }
+          }
+        }
+      }
+
+      draw() {
+        if (!this.alive) return;
+        ctx.beginPath();
+        let gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, this.radius);
+        gradient.addColorStop(0, "#fff");
+        gradient.addColorStop(1, this.color);
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        if (this.isBot) {
+          ctx.fillStyle = "white";
+          ctx.font = "14px EB Garamond";
+          ctx.textAlign = "center";
+          ctx.fillText(this.name, this.x, this.y - this.radius - 10);
+        }
+      }
+    }
+
+    class Fragment {
+      constructor(type = "normal") {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = 8 + Math.random() * 3;
+        this.collected = false;
+        this.type = type;
+      }
+
+      draw() {
+        if (!this.collected) {
+          ctx.beginPath();
+          ctx.fillStyle = this.type === "trap" ? "#ff3333" :
+                          this.type === "power" ? "#9933ff" : "#d9b3ff";
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
     let bots = [];
     let fragments = [];
 
@@ -112,7 +194,8 @@
         }
       }, 3000);
     }
-        function updateUI() {
+
+    function updateUI() {
       document.getElementById("ui").innerText =
         "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
     }
@@ -181,17 +264,16 @@
       updateUI();
       requestAnimationFrame(gameLoop);
     }
-        bots = spawnBots(5);
-    spawnFragments(15, 0.05); // Niveau 1 : très peu de pièges
+
+    bots = spawnBots(5);
+    spawnFragments(15, 0.05);
     gameLoop();
 
-    // Souris desktop
     canvas.addEventListener("mousemove", e => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     });
 
-    // Doigt mobile
     canvas.addEventListener("touchmove", e => {
       if (e.touches.length > 0) {
         mouse.x = e.touches[0].clientX;
