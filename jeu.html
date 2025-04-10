@@ -255,7 +255,9 @@
                 e.score++;
                 e.radius += 0.6;
               }
-              fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
+              if (fragments.filter(f => !f.collected).length < 100) {
+  fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
+}
             }
           }
         });
