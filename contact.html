@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,10 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact – Le Conceptarium</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em;
+    }
+
+    .logo {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.8em;
+      color: white;
+    }
+
+    .logo a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .burger div {
+      width: 25px;
+      height: 3px;
+      background-color: #fff;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .burger {
+        display: flex;
+      }
+
+      .navbar nav {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.9);
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 1em;
+        display: none;
+      }
+
+      .navbar nav.active {
+        display: flex;
+      }
+
+      .navbar nav a {
+        margin: 0.5em 0;
+      }
+    }
+  </style>
 </head>
 <body>
+
   <header class="navbar">
-    <div class="logo">Le Conceptarium</div>
+    <div class="logo">
+      <a href="index.html">Le Conceptarium</a>
+      <!-- Tu peux remplacer le texte ci-dessus par une image si besoin -->
+      <!-- <img src="IMG_1929.PNG" alt="Logo" style="height: 50px;"> -->
+    </div>
+
+    <div class="burger">
+      <div></div><div></div><div></div>
+    </div>
+
     <nav>
       <a href="index.html">Accueil</a>
       <a href="projets.html">Projets</a>
@@ -25,7 +92,7 @@
     <h1>Une idée ? Un projet ? Parlons-en.</h1>
     <p style="text-align:center;">Décrivez-moi votre univers, votre lieu, ou votre envie, et je vous recontacte rapidement.</p>
 
-    <div class="contact-container" style="display:flex;flex-wrap:wrap;gap:2em;margin-top:2em;">
+    <div class="contact-container" style="display:flex;flex-wrap:wrap;gap:2em;margin-top:2em;max-width:1100px;margin-inline:auto;">
       <div class="contact-form" style="flex:1 1 45%;min-width:280px;">
         <form onsubmit="sendMail(event)" style="display:flex;flex-direction:column;gap:1em;">
           <label>Nom :
@@ -39,7 +106,7 @@
               <option value="">Choisir un sujet</option>
               <option value="Escape game">Escape game</option>
               <option value="Scénario personnalisé">Scénario personnalisé</option>
-              <option value="Jeu à emporter">Jeu à emporter</option>
+              <option value="Exposition">Exposition</option>
               <option value="Autre">Autre</option>
             </select>
           </label>
@@ -55,48 +122,45 @@
           <button type="submit" class="cta-button">Envoyer ma demande de projet</button>
         </form>
       </div>
+
       <div class="contact-infos" style="flex:1 1 45%;min-width:280px;line-height:1.8;">
         <p><strong>Email :</strong><br><a href="mailto:leconceptarium@gmail.com">leconceptarium@gmail.com</a></p>
         <p><strong>Instagram :</strong><br><a href="https://www.instagram.com/leconceptarium" target="_blank">@leconceptarium</a></p>
         <p><strong>Disponibilité :</strong><br>Lun. – Ven. : 10h à 18h</p>
       </div>
     </div>
-
-    <script>
-      function sendMail(event) {
-        event.preventDefault();
-        const nom = document.getElementById("nom").value;
-        const email = document.getElementById("email").value;
-        const sujet = document.getElementById("sujet").value;
-        const budget = document.getElementById("budget").value;
-        const deadline = document.getElementById("deadline").value;
-        const message = document.getElementById("message").value;
-
-        const subject = encodeURIComponent("Demande de projet – " + sujet);
-        const body = encodeURIComponent(
-          `Nom : ${nom}\\nEmail : ${email}\\nSujet : ${sujet}\\nBudget estimé : ${budget}\\nDeadline : ${deadline}\\n\\n${message}`
-        );
-
-        window.location.href = `mailto:leconceptarium@gmail.com?subject=${subject}&body=${body}`;
-      }
-    </script>
   </main>
 
   <footer>
     <p>© 2025 Le Conceptarium – Tous droits réservés</p>
   </footer>
-</body>
-</html>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const burger = document.querySelector(".burger");
-    const nav = document.querySelector(".navbar nav");
-    burger.addEventListener("click", () => {
-      nav.classList.toggle("active");
+  <script>
+    function sendMail(event) {
+      event.preventDefault();
+      const nom = document.getElementById("nom").value;
+      const email = document.getElementById("email").value;
+      const sujet = document.getElementById("sujet").value;
+      const budget = document.getElementById("budget").value;
+      const deadline = document.getElementById("deadline").value;
+      const message = document.getElementById("message").value;
+
+      const subject = encodeURIComponent("Demande de projet – " + sujet);
+      const body = encodeURIComponent(
+        `Nom : ${nom}\nEmail : ${email}\nSujet : ${sujet}\nBudget estimé : ${budget}\nDeadline : ${deadline}\n\n${message}`
+      );
+
+      window.location.href = `mailto:leconceptarium@gmail.com?subject=${subject}&body=${body}`;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const burger = document.querySelector(".burger");
+      const nav = document.querySelector(".navbar nav");
+      burger.addEventListener("click", () => {
+        nav.classList.toggle("active");
+      });
     });
-  });
-</script>
+  </script>
 
 </body>
 </html>
