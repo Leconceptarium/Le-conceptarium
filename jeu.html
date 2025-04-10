@@ -168,10 +168,12 @@
       return arr;
     }
 
-    function triggerNextWave(waveNum) {
+        function triggerNextWave(waveNum) {
       const t = document.getElementById("transition");
       const text = document.getElementById("countdown-text");
       t.style.display = "flex";
+
+      // Réinitialisation correcte à chaque vague
       fragments = [];
       bots = [];
       countdownValue = 3;
@@ -185,6 +187,7 @@
       };
 
       text.innerText = messages[waveNum] || "";
+
       setTimeout(() => {
         const countdown = setInterval(() => {
           text.innerText = countdownValue > 0 ? countdownValue : "GO !";
@@ -199,20 +202,20 @@
             switch (waveNum) {
               case 2:
                 bots = spawnBots(6);
-                spawnFragments(20, 0.2);
+                spawnFragments(15, 0.2);
                 break;
               case 3:
                 bots = spawnBots(7);
                 bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 22, "#ffffff", true, "Le Veilleur", true));
-                spawnFragments(22, 0.3);
+                spawnFragments(15, 0.3);
                 break;
               case 4:
                 bots = spawnBots(10);
-                spawnFragments(25, 0.35, true);
+                spawnFragments(15, 0.35, true);
                 break;
               case 5:
                 bots = spawnBots(12);
-                spawnFragments(30, 0.4);
+                spawnFragments(15, 0.4);
                 break;
             }
           }
