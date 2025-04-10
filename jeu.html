@@ -26,20 +26,20 @@
     #transition {
       position: absolute;
       width: 100%; height: 100%;
-      background: radial-gradient(circle, rgba(255,255,255,0.6), rgba(13,11,31,0.8));
+      background: rgba(0,0,0,0.8);
       z-index: 20;
       display: none;
       align-items: center;
       justify-content: center;
       text-align: center;
       color: white;
-      font-size: 2em;
+      font-size: 4em;
     }
   </style>
 </head>
 <body>
   <div id="ui">Fragments : 0 | Bots : 0</div>
-  <div id="transition">Une nouvelle vague approche…</div>
+  <div id="transition"><span id="countdown-text">Une nouvelle vague approche…</span></div>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -51,6 +51,8 @@
     let wave = 1;
     let veilActive = false;
     let veilTimer = 0;
+    let waveDelay = false;
+    let countdownValue = 3;
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
@@ -71,7 +73,7 @@
 
       update() {
         if (!this.alive) return;
-        if (!this.isBot) {
+        if (!this.isBot || waveDelay) {
           this.x += (mouse.x - this.x) * 0.07;
           this.y += (mouse.y - this.y) * 0.07;
         } else if (this.isVeilleur) {
@@ -166,33 +168,42 @@
 
     function triggerNextWave(waveNum) {
       const t = document.getElementById("transition");
+      const text = document.getElementById("countdown-text");
       t.style.display = "flex";
-      t.innerText = "Vague " + waveNum + " approche...";
-      fragments = [];
+      countdownValue = 3;
+      waveDelay = true;
 
-      setTimeout(() => {
-        t.style.display = "none";
-        wave = waveNum;
-        switch (waveNum) {
-          case 2:
-            bots = spawnBots(8);
-            spawnFragments(20, 0.15);
-            break;
-          case 3:
-            bots = spawnBots(6);
-            bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 20, "#ffffff", true, "Le Veilleur", true));
-            spawnFragments(20, 0.25);
-            break;
-          case 4:
-            bots = spawnBots(10);
-            spawnFragments(22, 0.35, true);
-            break;
-          case 5:
-            bots = spawnBots(12);
-            spawnFragments(25, 0.4);
-            break;
+      const countdown = setInterval(() => {
+        text.innerText = countdownValue > 0 ? countdownValue : "GO !";
+        countdownValue--;
+
+        if (countdownValue < 0) {
+          clearInterval(countdown);
+          t.style.display = "none";
+          wave = waveNum;
+          waveDelay = false;
+
+          switch (waveNum) {
+            case 2:
+              bots = spawnBots(8);
+              spawnFragments(20, 0.15);
+              break;
+            case 3:
+              bots = spawnBots(6);
+              bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 20, "#ffffff", true, "Le Veilleur", true));
+              spawnFragments(20, 0.25);
+              break;
+            case 4:
+              bots = spawnBots(10);
+              spawnFragments(22, 0.35, true);
+              break;
+            case 5:
+              bots = spawnBots(12);
+              spawnFragments(25, 0.4);
+              break;
+          }
         }
-      }, 3000);
+      }, 500);
     }
 
     function updateUI() {
