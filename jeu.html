@@ -150,10 +150,16 @@
     function spawnFragments(n, traps = 0.1, power = false) {
       maxFragments = n;
       fragments = [];
-      for (let i = 0; i < n; i++) {
-        let type = Math.random() < traps ? "trap" : "normal";
-        fragments.push(new Fragment(type));
-      }
+let spawned = 0;
+let interval = setInterval(() => {
+  let type = Math.random() < traps ? "trap" : "normal";
+  fragments.push(new Fragment(type));
+  spawned++;
+  if (spawned >= n) {
+    if (power) fragments.push(new Fragment("power"));
+    clearInterval(interval);
+  }
+}, 30); // un fragment toutes les 30ms
       if (power) fragments.push(new Fragment("power"));
     }
 
