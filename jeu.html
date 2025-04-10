@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>L’Ombre du Rêveur – Fragments Piégés</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L’Ombre du Rêveur – L’Ultime Vague</title>
   <style>
     html, body {
       margin: 0;
@@ -38,6 +38,18 @@
       text-align: center;
       color: white;
       font-size: 2em;
+      animation: fadeout 2s forwards;
+    }
+    @keyframes fadeout {
+      0% { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
+    .flash {
+      animation: flashAnim 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes flashAnim {
+      from { background-color: rgba(255, 255, 255, 0.2); }
+      to { background-color: rgba(255, 0, 0, 0.3); }
     }
   </style>
 </head>
@@ -54,12 +66,14 @@
     let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
     let level = 1;
     let nextWaveTriggered = false;
+    let veilActive = false;
+    let veilTimer = 0;
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
 
     class Entity {
-      constructor(x, y, radius, color, isBot = false, name = "") {
+      constructor(x, y, radius, color, isBot = false, name = "", isVeilleur = false) {
         this.x = x;
         this.y = y;
         this.radius = radius;
@@ -70,6 +84,7 @@
         this.target = null;
         this.alive = true;
         this.speed = isBot ? (level === 1 ? 1.8 : 2.6) : 0;
+        this.isVeilleur = isVeilleur;
       }
 
       update() {
@@ -78,16 +93,26 @@
           this.x += (mouse.x - this.x) * 0.07;
           this.y += (mouse.y - this.y) * 0.07;
         } else {
-          if (!this.target || this.target.collected) {
-            this.target = fragments[Math.floor(Math.random() * fragments.length)];
-          }
-          if (this.target) {
-            let dx = this.target.x - this.x;
-            let dy = this.target.y - this.y;
+          if (this.isVeilleur) {
+            let dx = player.x - this.x;
+            let dy = player.y - this.y;
             let dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 1) {
-              this.x += (dx / dist) * this.speed;
-              this.y += (dy / dist) * this.speed;
+              this.x += (dx / dist) * this.speed * 1.4;
+              this.y += (dy / dist) * this.speed * 1.4;
+            }
+          } else {
+            if (!this.target || this.target.collected) {
+              this.target = fragments[Math.floor(Math.random() * fragments.length)];
+            }
+            if (this.target) {
+              let dx = this.target.x - this.x;
+              let dy = this.target.y - this.y;
+              let dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist > 1) {
+                this.x += (dx / dist) * this.speed;
+                this.y += (dy / dist) * this.speed;
+              }
             }
           }
         }
@@ -113,18 +138,21 @@
     }
 
     class Fragment {
-      constructor(isTrap = false) {
+      constructor(type = "normal") {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.radius = 8 + Math.random() * 3;
         this.collected = false;
-        this.isTrap = isTrap;
+        this.type = type; // normal, trap, or power
       }
 
       draw() {
         if (!this.collected) {
           ctx.beginPath();
-          ctx.fillStyle = this.isTrap ? "#ff3333" : "#d9b3ff";
+          ctx.fillStyle =
+            this.type === "trap" ? "#ff3333" :
+            this.type === "power" ? "#9933ff" :
+            "#d9b3ff";
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
           ctx.fill();
         }
@@ -132,20 +160,16 @@
     }
 
     const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
-    let bots = spawnBots(5);
-    let fragments = spawnInitialFragments(15);
-
-    function spawnInitialFragments(n) {
-      return Array.from({ length: n }, () => new Fragment(Math.random() < 0.2));
-    }
-
-    function spawnFragment() {
-      fragments.push(new Fragment(Math.random() < 0.2));
-    }
-
-    function updateUI() {
-      document.getElementById("ui").innerText =
-        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
+    let bots = [];
+    let fragments = [];
+    let wave = 1;
+        function spawnFragments(n, traps = 0.1, power = false) {
+      fragments = [];
+      for (let i = 0; i < n; i++) {
+        let type = Math.random() < traps ? "trap" : "normal";
+        fragments.push(new Fragment(type));
+      }
+      if (power) fragments.push(new Fragment("power"));
     }
 
     function spawnBots(n) {
@@ -163,18 +187,51 @@
       return arr;
     }
 
-    function triggerNextWave() {
+    function triggerNextWave(waveNum) {
       const t = document.getElementById("transition");
       t.style.display = "flex";
+      t.innerText = "Vague " + waveNum + " approche...";
       setTimeout(() => {
         t.style.display = "none";
-        level = 2;
-        player.radius = 10;
-        bots = spawnBots(8);
+        wave = waveNum;
+        switch (waveNum) {
+          case 2:
+            player.radius = 10;
+            bots = spawnBots(8);
+            spawnFragments(20, 0.2);
+            break;
+          case 3:
+            bots = spawnBots(6);
+            bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 20, "#ffffff", true, "Le Veilleur", true));
+            spawnFragments(20, 0.25);
+            break;
+          case 4:
+            bots = spawnBots(10);
+            spawnFragments(22, 0.35, true);
+            break;
+          case 5:
+            bots = spawnBots(12);
+            document.body.classList.add("flash");
+            spawnFragments(25, 0.4);
+            break;
+        }
       }, 3000);
     }
 
+    function updateUI() {
+      document.getElementById("ui").innerText =
+        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
+    }
+
     function gameLoop() {
+      if (veilActive) {
+        veilTimer--;
+        if (veilTimer <= 0) {
+          veilActive = false;
+          player.radius /= 1.5;
+        }
+      }
+
       ctx.fillStyle = "rgba(13,11,31,0.25)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -189,13 +246,17 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < e.radius + f.radius) {
               f.collected = true;
-              if (f.isTrap) {
+              if (f.type === "trap") {
                 e.radius = Math.max(5, e.radius / 2);
+              } else if (f.type === "power" && e === player) {
+                veilActive = true;
+                veilTimer = 180;
+                player.radius *= 1.5;
               } else {
                 e.score++;
                 e.radius += 0.6;
               }
-              spawnFragment();
+              fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
             }
           }
         });
@@ -217,9 +278,15 @@
         }
       });
 
-      if (!nextWaveTriggered && bots.every(b => !b.alive)) {
-        nextWaveTriggered = true;
-        triggerNextWave();
+      // Transition automatique vers prochaines vagues
+      if (bots.every(b => !b.alive)) {
+        if (wave < 5) {
+          triggerNextWave(wave + 1);
+        } else {
+          document.body.classList.remove("flash");
+          alert("Tu as survécu à toutes les vagues. Le rêve t'accepte.");
+          location.reload();
+        }
       }
 
       fragments.forEach(f => f.draw());
@@ -227,6 +294,9 @@
       requestAnimationFrame(gameLoop);
     }
 
+    // Lancement initial
+    bots = spawnBots(5);
+    spawnFragments(15, 0.05); // VAGUE 1 avec peu de pièges
     gameLoop();
 
     canvas.addEventListener("mousemove", e => {
