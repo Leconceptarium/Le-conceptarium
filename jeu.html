@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L’Ombre du Rêveur – Vagues Fixées</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>L'Éveil du Rêveur</title>
   <style>
     html, body {
       margin: 0;
@@ -16,7 +16,8 @@
     canvas { display: block; }
     #ui {
       position: absolute;
-      top: 10px; left: 10px;
+      top: 10px;
+      left: 10px;
       background: rgba(0,0,0,0.4);
       padding: 0.5em 1em;
       border-radius: 10px;
@@ -25,7 +26,8 @@
     }
     #transition {
       position: absolute;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       background: rgba(0,0,0,0.85);
       z-index: 20;
       display: none;
@@ -34,6 +36,7 @@
       text-align: center;
       color: white;
       font-size: 4em;
+      flex-direction: column;
     }
   </style>
 </head>
@@ -68,7 +71,7 @@
         this.name = name;
         this.target = null;
         this.alive = true;
-        this.speed = isBot ? (wave === 1 ? 1.8 : 2.6) : 0;
+        this.speed = isBot ? 2.0 + wave * 0.3 : 0;
         this.isVeilleur = isVeilleur;
       }
 
@@ -82,8 +85,8 @@
           let dy = player.y - this.y;
           let dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 1) {
-            this.x += (dx / dist) * this.speed * 1.4;
-            this.y += (dy / dist) * this.speed * 1.4;
+            this.x += (dx / dist) * this.speed * 1.5;
+            this.y += (dy / dist) * this.speed * 1.5;
           }
         } else {
           if (!this.target || this.target.collected) {
@@ -141,9 +144,8 @@
 
     const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
     let bots = [];
-    let fragments = [];
-
-    function spawnFragments(n, traps = 0.1, power = false) {
+    let fragments = []
+        function spawnFragments(n, traps = 0.1, power = false) {
       for (let i = 0; i < n; i++) {
         let type = Math.random() < traps ? "trap" : "normal";
         fragments.push(new Fragment(type));
@@ -175,42 +177,52 @@
       countdownValue = 3;
       waveDelay = true;
 
-      const countdown = setInterval(() => {
-        text.innerText = countdownValue > 0 ? countdownValue : "GO !";
-        countdownValue--;
+      const messages = {
+        2: "Une nouvelle menace approche...",
+        3: "Le Veilleur s'éveille...",
+        4: "L'air devient électrique...",
+        5: "Ils fusionnent. Prépare-toi."
+      };
 
-        if (countdownValue < 0) {
-          clearInterval(countdown);
-          t.style.display = "none";
-          wave = waveNum;
-          waveDelay = false;
+      text.innerText = messages[waveNum] || "";
+      setTimeout(() => {
+        const countdown = setInterval(() => {
+          text.innerText = countdownValue > 0 ? countdownValue : "GO !";
+          countdownValue--;
 
-          switch (waveNum) {
-            case 2:
-              bots = spawnBots(8);
-              spawnFragments(20, 0.15);
-              break;
-            case 3:
-              bots = spawnBots(6);
-              bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 20, "#ffffff", true, "Le Veilleur", true));
-              spawnFragments(20, 0.25);
-              break;
-            case 4:
-              bots = spawnBots(10);
-              spawnFragments(22, 0.35, true);
-              break;
-            case 5:
-              bots = spawnBots(12);
-              spawnFragments(25, 0.4);
-              break;
+          if (countdownValue < 0) {
+            clearInterval(countdown);
+            t.style.display = "none";
+            wave = waveNum;
+            waveDelay = false;
+
+            switch (waveNum) {
+              case 2:
+                bots = spawnBots(6);
+                spawnFragments(20, 0.2);
+                break;
+              case 3:
+                bots = spawnBots(7);
+                bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 22, "#ffffff", true, "Le Veilleur", true));
+                spawnFragments(22, 0.3);
+                break;
+              case 4:
+                bots = spawnBots(10);
+                spawnFragments(25, 0.35, true);
+                break;
+              case 5:
+                bots = spawnBots(12);
+                spawnFragments(30, 0.4);
+                break;
+            }
           }
-        }
-      }, 600);
+        }, 700);
+      }, 1500);
     }
 
     function updateUI() {
       document.getElementById("ui").innerText =
-        "Fragments : " + player.score + " | Bots : " + bots.filter(b => b.alive).length;
+        "Fragments : " + player.score + " | Chasseurs : " + bots.filter(b => b.alive).length;
     }
 
     function gameLoop() {
@@ -269,7 +281,7 @@
       if (bots.every(b => !b.alive)) {
         if (wave < 5) triggerNextWave(wave + 1);
         else {
-          alert("Tu as survécu à toutes les vagues. Le rêve t'accepte.");
+          alert("Tu as survécu à toutes les vagues. Le rêve t’accepte. Score final : " + player.score);
           location.reload();
         }
       }
@@ -279,7 +291,7 @@
       requestAnimationFrame(gameLoop);
     }
 
-    bots = spawnBots(5);
+    bots = spawnBots(4);
     spawnFragments(15, 0.05);
     gameLoop();
 
