@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L’Ombre du Rêveur – L’Ultime Vague</title>
+  <title>L’Ombre du Rêveur – Vagues Fixées</title>
   <style>
     html, body {
       margin: 0;
@@ -26,7 +26,7 @@
     #transition {
       position: absolute;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       z-index: 20;
       display: none;
       align-items: center;
@@ -38,8 +38,8 @@
   </style>
 </head>
 <body>
-  <div id="ui">Fragments : 0 | Bots : 0</div>
-  <div id="transition"><span id="countdown-text">Une nouvelle vague approche…</span></div>
+  <div id="ui">Fragments : 0 | Chasseurs : 0</div>
+  <div id="transition"><span id="countdown-text"></span></div>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -53,6 +53,7 @@
     let veilTimer = 0;
     let waveDelay = false;
     let countdownValue = 3;
+    let isDead = false;
 
     const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
     const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
@@ -143,7 +144,6 @@
     let fragments = [];
 
     function spawnFragments(n, traps = 0.1, power = false) {
-      fragments = [];
       for (let i = 0; i < n; i++) {
         let type = Math.random() < traps ? "trap" : "normal";
         fragments.push(new Fragment(type));
@@ -170,6 +170,8 @@
       const t = document.getElementById("transition");
       const text = document.getElementById("countdown-text");
       t.style.display = "flex";
+      fragments = [];
+      bots = [];
       countdownValue = 3;
       waveDelay = true;
 
@@ -203,7 +205,7 @@
               break;
           }
         }
-      }, 500);
+      }, 600);
     }
 
     function updateUI() {
@@ -257,7 +259,8 @@
           player.radius += e.radius / 2;
         }
 
-        if (dist < e.radius && e.radius > player.radius + 5 && player.alive) {
+        if (dist < e.radius && e.radius > player.radius + 5 && player.alive && !isDead) {
+          isDead = true;
           alert("Tu as été absorbé… Recommençons !");
           location.reload();
         }
