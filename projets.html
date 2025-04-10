@@ -15,6 +15,24 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .carousel-container {
+      position: relative;
+      max-width: 400px;
+      cursor: pointer;
+    }
+
+    .carousel-image {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      display: none;
+    }
+
+    .carousel-image.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   
@@ -41,9 +59,13 @@
     <section class="project">
       <h2>LA MALÉDICTION DE MONSIEUR BRISEBARD</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
-        <img src="brisebard.PNG" alt="Escape Game Brisebard" style="max-width: 400px; width: 100%; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.4);">
+        <div class="carousel-container">
+          <img src="brisebard.PNG" class="carousel-image active" alt="Brisebard 1">
+          <img src="brisebard2.jpg" class="carousel-image" alt="Brisebard 2">
+          <img src="brisebard3.jpg" class="carousel-image" alt="Brisebard 3">
+        </div>
         <div style="flex: 1; min-width: 250px;">
-          <p>Dans une vieille demeure léguée par un certain Monsieur Brisebard, une malédiction plane. Inspiré de faits réels, ce jeu plonge les joueurs dans une enquête sombre, au cœur même du lieu où tout s’est déroulé.</p>
+          <p>Dans une vieille demeure léguée par vos ancêtres, une malédiction plane. Inspiré de faits réels, ce jeu plonge les joueurs dans une enquête sombre, au cœur même du lieu où tout s’est déroulé.</p>
           <p>Commandé par la ville de Tonnerre, cet escape game temporaire a été conçu pour faire vivre un lieu historique autrement.</p>
           <p>Plus de 300 enquêteurs en moins de 3 mois. Une aventure qui allie patrimoine, jeu et immersion. Et vous, auriez-vous osé entrer chez Brisebard ?</p>
         </div>
@@ -53,7 +75,11 @@
     <section class="project">
       <h2>DESTINY BOX : Le Secret de la Lanterne</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
-        <img src="destiny.PNG" alt="Affiche Destiny Box" style="max-width: 400px; width: 100%; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.4);">
+        <div class="carousel-container">
+          <img src="destiny.PNG" class="carousel-image active" alt="Destiny Box 1">
+          <img src="destiny2.jpg" class="carousel-image" alt="Destiny Box 2">
+          <img src="destiny3.jpg" class="carousel-image" alt="Destiny Box 3">
+        </div>
         <div style="flex: 1; min-width: 250px;">
           <p>Une étrange boîte contenant une lanterne maudite refait surface. Pour percer ses secrets, il faudra manipuler ses mécanismes, observer chaque détail, et plonger dans une histoire sombre ponctuée de sons, vidéos et révélations.</p>
           <p>Cette aventure transportable se joue en petit groupe avec smartphone en main, dans une ambiance captivante et progressive.</p>
@@ -65,7 +91,11 @@
     <section class="project">
       <h2>CYBER BOX</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
-        <img src="IMG_9118.jpeg" alt="Cyber Box EVA Strasbourg" style="max-width: 400px; width: 100%; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.4);">
+        <div class="carousel-container">
+          <img src="IMG_9118.jpeg" class="carousel-image active" alt="Cyber Box 1">
+          <img src="cyber2.jpg" class="carousel-image" alt="Cyber Box 2">
+          <img src="cyber3.jpg" class="carousel-image" alt="Cyber Box 3">
+        </div>
         <div style="flex: 1; min-width: 250px;">
           <p>Dans un futur dévasté, une plante miraculeuse pourrait sauver l’Humanité. À vous de déchiffrer les secrets d’une boîte codée pour empêcher l’irréparable.</p>
           <p>Créée pour EVA Strasbourg, cette expérience de 15 minutes oppose deux équipes ou peut se jouer en solo. Un format rapide, nerveux et visuellement marquant, pensé pour les événements et les lieux de passage.</p>
@@ -86,6 +116,20 @@
       const nav = document.querySelector(".navbar nav");
       burger.addEventListener("click", () => {
         nav.classList.toggle("active");
+      });
+
+      const carousels = document.querySelectorAll(".carousel-container");
+      carousels.forEach(container => {
+        let index = 0;
+        const images = container.querySelectorAll(".carousel-image");
+        if (images.length) {
+          images[0].classList.add("active");
+          container.addEventListener("click", () => {
+            images[index].classList.remove("active");
+            index = (index + 1) % images.length;
+            images[index].classList.add("active");
+          });
+        }
       });
     });
   </script>
