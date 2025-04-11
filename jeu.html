@@ -2,317 +2,136 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <title>Le Sanctuaire du Rêveur</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>L'Éveil du Rêveur</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: #0d0b1f;
-      overflow: hidden;
-      font-family: 'EB Garamond', serif;
-      color: white;
-    }
+    html, body { margin: 0; padding: 0; overflow: hidden; background-color: #0d0b1f; touch-action: none; }
     canvas { display: block; }
     #ui {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.4);
-      padding: 0.5em 1em;
-      border-radius: 10px;
-      font-size: 1em;
-      z-index: 10;
-    }
-    #transition {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      z-index: 20;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.5);
+      padding: 10px 20px;
       color: white;
-      font-size: 4em;
-      flex-direction: column;
+      font-family: 'EB Garamond', serif;
+      font-size: 1.2em;
+      border-radius: 10px;
+      z-index: 10;
+      max-width: 90%;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div id="ui">Fragments : 0 | Chasseurs : 0</div>
-  <div id="transition"><span id="countdown-text"></span></div>
-  <canvas id="gameCanvas"></canvas>
+  <div id="ui">*Vous êtes dans le sanctuaire du Rêveur... Trouvez les 3 fragments d’éveil.*</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r146/three.min.js"></script>
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let scene = new THREE.Scene();
+    let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    let renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
-    let wave = 1;
-    let veilActive = false;
-    let veilTimer = 0;
-    let waveDelay = false;
-    let countdownValue = 3;
-    let isDead = false;
+    scene.fog = new THREE.Fog(0x0d0b1f, 10, 50);
+    const ui = document.getElementById("ui");
 
-    const botNames = ["Nyx", "Umbra", "Vesper", "Echo", "Noctis", "Zar", "Lira", "Seth"];
-    const botColors = ["#7754cc", "#ff6699", "#66ccff", "#ffaa00", "#99ff66", "#cc66ff", "#33ffaa", "#ff3333"];
+    // Lumières
+    scene.add(new THREE.AmbientLight(0xd9b3ff, 1.2));
+    const pointLight = new THREE.PointLight(0xff66cc, 1, 100);
+    pointLight.position.set(10, 15, 10);
+    scene.add(pointLight);
 
-    class Entity {
-      constructor(x, y, radius, color, isBot = false, name = "", isVeilleur = false) {
-        this.x = x; this.y = y;
-        this.radius = radius;
-        this.color = color;
-        this.score = 0;
-        this.isBot = isBot;
-        this.name = name;
-        this.target = null;
-        this.alive = true;
-        this.speed = isBot ? 2.0 + wave * 0.3 : 0;
-        this.isVeilleur = isVeilleur;
-      }
-
-      update() {
-        if (!this.alive) return;
-        if (!this.isBot || waveDelay) {
-          this.x += (mouse.x - this.x) * 0.07;
-          this.y += (mouse.y - this.y) * 0.07;
-        } else if (this.isVeilleur) {
-          let dx = player.x - this.x;
-          let dy = player.y - this.y;
-          let dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 1) {
-            this.x += (dx / dist) * this.speed * 1.5;
-            this.y += (dy / dist) * this.speed * 1.5;
-          }
-        } else {
-          if (!this.target || this.target.collected) {
-            this.target = fragments[Math.floor(Math.random() * fragments.length)];
-          }
-          if (this.target) {
-            let dx = this.target.x - this.x;
-            let dy = this.target.y - this.y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 1) {
-              this.x += (dx / dist) * this.speed;
-              this.y += (dy / dist) * this.speed;
-            }
-          }
-        }
-      }
-
-      draw() {
-        if (!this.alive) return;
-        ctx.beginPath();
-        let gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, this.radius);
-        gradient.addColorStop(0, "#fff");
-        gradient.addColorStop(1, this.color);
-        ctx.fillStyle = gradient;
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        if (this.isBot) {
-          ctx.fillStyle = "white";
-          ctx.font = "14px EB Garamond";
-          ctx.textAlign = "center";
-          ctx.fillText(this.name, this.x, this.y - this.radius - 10);
-        }
+    // Sol voxel
+    const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x282043 });
+    for (let x = -6; x <= 6; x++) {
+      for (let z = -6; z <= 6; z++) {
+        const cube = new THREE.Mesh(boxGeo, groundMat);
+        cube.position.set(x, -1, z);
+        scene.add(cube);
       }
     }
 
-    class Fragment {
-      constructor(type = "normal") {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.radius = 8 + Math.random() * 3;
-        this.collected = false;
-        this.type = type;
-      }
+    // Fragments mystiques
+    const fragmentMat = new THREE.MeshStandardMaterial({ color: 0xffccff, emissive: 0xaa66ff, emissiveIntensity: 1 });
+    const fragments = [];
+    const fragmentPositions = [
+      [3, 0, -2],
+      [-4, 0, 1],
+      [0, 0, 4]
+    ];
 
-      draw() {
-        if (!this.collected) {
-          ctx.beginPath();
-          ctx.fillStyle = this.type === "trap" ? "#ff3333" :
-                          this.type === "power" ? "#9933ff" : "#d9b3ff";
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    const player = new Entity(canvas.width / 2, canvas.height / 2, 10, "#a366ff", false, "Toi");
-    let bots = [];
-    let fragments = [];
-
-    function spawnFragments(n, traps = 0.1, power = false) {
-      for (let i = 0; i < n; i++) {
-        let type = Math.random() < traps ? "trap" : "normal";
-        fragments.push(new Fragment(type));
-      }
-      if (power) fragments.push(new Fragment("power"));
-    }
-
-    function spawnBots(n) {
-      const arr = [];
-      for (let i = 0; i < n; i++) {
-        arr.push(new Entity(
-          Math.random() * canvas.width,
-          Math.random() * canvas.height,
-          15,
-          botColors[i % botColors.length],
-          true,
-          botNames[i % botNames.length]
-        ));
-      }
-      return arr;
-    }
-
-    function triggerNextWave(waveNum) {
-      const t = document.getElementById("transition");
-      const text = document.getElementById("countdown-text");
-      t.style.display = "flex";
-      fragments = [];
-      bots = [];
-      countdownValue = 3;
-      waveDelay = true;
-
-      const messages = {
-        2: "Une nouvelle menace approche...",
-        3: "Le Veilleur s'éveille...",
-        4: "L'air devient électrique...",
-        5: "Ils fusionnent. Prépare-toi."
-      };
-
-      text.innerText = messages[waveNum] || "";
-      setTimeout(() => {
-        const countdown = setInterval(() => {
-          text.innerText = countdownValue > 0 ? countdownValue : "GO !";
-          countdownValue--;
-
-          if (countdownValue < 0) {
-            clearInterval(countdown);
-            t.style.display = "none";
-            wave = waveNum;
-            waveDelay = false;
-
-            switch (waveNum) {
-              case 2:
-                bots = spawnBots(6);
-                spawnFragments(15, 0.05); // identique à vague 1
-                break;
-              case 3:
-                bots = spawnBots(7);
-                bots.push(new Entity(Math.random()*canvas.width, Math.random()*canvas.height, 22, "#ffffff", true, "Le Veilleur", true));
-                spawnFragments(15, 0.05);
-                break;
-              case 4:
-                bots = spawnBots(10);
-                spawnFragments(20, 0.3, true);
-                break;
-              case 5:
-                bots = spawnBots(12);
-                spawnFragments(25, 0.4, true);
-                break;
-            }
-          }
-        }, 700);
-      }, 1500);
-    }
-
-    function updateUI() {
-      document.getElementById("ui").innerText =
-        "Fragments : " + player.score + " | Chasseurs : " + bots.filter(b => b.alive).length;
-    }
-
-    function gameLoop() {
-      if (veilActive && --veilTimer <= 0) {
-        veilActive = false;
-        player.radius /= 1.5;
-      }
-
-      ctx.fillStyle = "rgba(13,11,31,0.25)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      [...bots, player].forEach(e => {
-        e.update();
-        e.draw();
-
-        fragments.forEach(f => {
-          if (!f.collected && e.alive) {
-            const dx = e.x - f.x;
-            const dy = e.y - f.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < e.radius + f.radius) {
-              f.collected = true;
-              if (f.type === "trap") {
-                e.radius = Math.max(5, e.radius / 2);
-              } else if (f.type === "power" && e === player) {
-                veilActive = true;
-                veilTimer = 180;
-                player.radius *= 1.5;
-              } else {
-                e.score++;
-                e.radius += 0.6;
-              }
-              if (fragments.filter(f => !f.collected).length < 100) {
-                fragments.push(new Fragment(Math.random() < 0.25 ? "trap" : "normal"));
-              }
-            }
-          }
-        });
-
-        if (!e.isBot || !e.alive) return;
-        const dx = player.x - e.x;
-        const dy = player.y - e.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < player.radius && player.radius > e.radius + 5 && e.alive) {
-          e.alive = false;
-          player.score += e.score;
-          player.radius += e.radius / 2;
-        }
-
-        if (dist < e.radius && e.radius > player.radius + 5 && player.alive && !isDead) {
-          isDead = true;
-          alert("Tu as été absorbé… Recommençons !");
-          location.reload();
-        }
-      });
-
-      if (bots.every(b => !b.alive)) {
-        if (wave < 5) triggerNextWave(wave + 1);
-        else {
-          alert("Tu as survécu à toutes les vagues. Le rêve t’accepte. Score final : " + player.score);
-          location.reload();
-        }
-      }
-
-      fragments.forEach(f => f.draw());
-      updateUI();
-      requestAnimationFrame(gameLoop);
-    }
-
-    bots = spawnBots(4);
-    spawnFragments(15, 0.05);
-    gameLoop();
-
-    canvas.addEventListener("mousemove", e => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
+    fragmentPositions.forEach(pos => {
+      const frag = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), fragmentMat.clone());
+      frag.position.set(...pos);
+      frag.userData.collected = false;
+      scene.add(frag);
+      fragments.push(frag);
     });
 
-    canvas.addEventListener("touchmove", e => {
-      if (e.touches.length > 0) {
-        mouse.x = e.touches[0].clientX;
-        mouse.y = e.touches[0].clientY;
+    // Caméra
+    camera.position.set(0, 1.2, 5);
+    let yaw = 0, pitch = 0;
+    let touchStartX = 0, touchStartY = 0;
+    let collected = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      fragments.forEach(frag => {
+        if (!frag.userData.collected) frag.rotation.y += 0.01;
+        const dx = camera.position.x - frag.position.x;
+        const dz = camera.position.z - frag.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < 1.2 && !frag.userData.collected) {
+          frag.userData.collected = true;
+          frag.visible = false;
+          collected++;
+          if (collected < 3) {
+            ui.innerText = `Fragment ${collected} récupéré...`;
+          } else {
+            ui.innerText = "Les fragments sont réunis. Le Rêveur s’éveille...";
+            const light = new THREE.PointLight(0xffffff, 2, 50);
+            light.position.set(0, 3, 0);
+            scene.add(light);
+          }
+        }
+      });
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Touches tactiles pour vue immersive + déplacement
+    document.addEventListener("touchstart", e => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
       }
-    }, { passive: false });
+    });
+
+    document.addEventListener("touchmove", e => {
+      if (e.touches.length === 1) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+
+        yaw -= dx * 0.005;
+        pitch -= dy * 0.005;
+        pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+        camera.rotation.order = "YXZ";
+        camera.rotation.y = yaw;
+        camera.rotation.x = pitch;
+
+        camera.translateZ(-0.1);
+      }
+    });
 
     window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
