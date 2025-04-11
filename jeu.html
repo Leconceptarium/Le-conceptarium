@@ -15,36 +15,42 @@
     canvas { display: block; }
     #intro {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
-      padding: 1em 2em;
+      background: rgba(0,0,0,0.85);
+      padding: 2em;
       color: white;
-      border-radius: 10px;
+      border-radius: 12px;
       text-align: center;
       z-index: 10;
     }
     #joystick {
       position: absolute;
-      bottom: 20px; left: 20px;
-      width: 100px; height: 100px;
-      background: rgba(255,255,255,0.1);
+      bottom: 20px;
+      left: 20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 50%;
       touch-action: none;
       z-index: 10;
     }
     #stick {
-      width: 40px; height: 40px;
-      background: rgba(255,255,255,0.5);
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.5);
       border-radius: 50%;
       position: absolute;
-      top: 30px; left: 30px;
+      top: 30px;
+      left: 30px;
     }
   </style>
 </head>
 <body>
   <div id="intro">
-    *Vous êtes dans le sanctuaire du Rêveur...<br>Trouvez les 3 fragments d’éveil.*<br><br>
+    *Bienvenue dans le Sanctuaire du Rêveur...*<br><br>
+    Trouvez les **3 fragments d’éveil** en évitant les entités hostiles.<br><br>
     <button onclick="startGame()">Commencer</button>
   </div>
   <div id="joystick"><div id="stick"></div></div>
@@ -54,7 +60,9 @@
   <script>
     let scene, camera, renderer, player, light;
     let fragments = [], collected = 0;
+    let enemies = [], enemyTimer = 0;
     let moveX = 0, moveZ = 0;
+    let maxBoundary = 40;
 
     const canvas = document.getElementById("gameCanvas");
     const intro = document.getElementById("intro");
@@ -65,28 +73,55 @@
       animate();
     }
 
+    function createMysticPlayer() {
+      const group = new THREE.Group();
+      const core = new THREE.Mesh(
+        new THREE.SphereGeometry(0.6, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0xa366ff, emissive: 0x551177 })
+      );
+      group.add(core);
+
+      for (let i = 0; i < 2; i++) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(1.2, 0.05, 16, 100),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x7722aa })
+        );
+        ring.rotation.x = i === 0 ? Math.PI / 2 : 0;
+        group.add(ring);
+      }
+      return group;
+    }
+
     function init() {
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x0d0b1f, 0.02);
+
+      const ambient = new THREE.AmbientLight(0x8888ff, 0.4);
+      scene.add(ambient);
+
+      light = new THREE.PointLight(0xffaaff, 1.2, 30);
+      light.position.set(0, 6, 6);
+      scene.add(light);
+
+      const bgParticles = new THREE.Points(
+        new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(
+          Array.from({length: 300}, () => (Math.random() - 0.5) * 100), 3)),
+        new THREE.PointsMaterial({ color: 0xcc99ff, size: 0.3 })
+      );
+      scene.add(bgParticles);
+
       camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setClearColor(0x0d0b1f);
 
-      const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const material = new THREE.MeshStandardMaterial({ color: 0x6633aa });
-      player = new THREE.Mesh(geometry, material);
-      scene.add(player);
-
-      const floorGeometry = new THREE.PlaneGeometry(100, 100, 32, 32);
-      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1f102f });
+      const floorGeometry = new THREE.PlaneGeometry(100, 100, 10, 10);
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x221133 });
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -Math.PI / 2;
       scene.add(floor);
 
-      light = new THREE.PointLight(0xff00ff, 2, 30);
-      light.position.set(0, 5, 5);
-      scene.add(light);
+      player = createMysticPlayer();
+      player.position.set(0, 0.6, 0);
+      scene.add(player);
 
       camera.position.set(0, 5, 5);
       camera.lookAt(player.position);
@@ -94,13 +129,21 @@
       for (let i = 0; i < 3; i++) {
         const frag = new THREE.Mesh(
           new THREE.SphereGeometry(0.4, 16, 16),
-          new THREE.MeshStandardMaterial({ color: 0xffaaff, emissive: 0x7722aa })
+          new THREE.MeshStandardMaterial({ color: 0xffe6ff, emissive: 0xaa55ff, emissiveIntensity: 1 })
         );
-        frag.position.set((Math.random() - 0.5) * 20, 0.5, (Math.random() - 0.5) * 20);
-        frag.userData.dy = Math.random() * 0.01 + 0.005;
+        frag.position.set((Math.random() - 0.5) * 20, 0.4, (Math.random() - 0.5) * 20);
         fragments.push(frag);
         scene.add(frag);
       }
+    }
+
+    function spawnEnemy() {
+      const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+      const material = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0x550000 });
+      const enemy = new THREE.Mesh(geometry, material);
+      enemy.position.set((Math.random() - 0.5) * 40, 0.5, (Math.random() - 0.5) * 40);
+      scene.add(enemy);
+      enemies.push(enemy);
     }
 
     function animate() {
@@ -108,23 +151,43 @@
       light.position.x = Math.sin(Date.now() * 0.001) * 10;
       light.position.z = Math.cos(Date.now() * 0.001) * 10;
 
-      player.position.x += moveX * 0.1;
-      player.position.z += moveZ * 0.1;
+      player.position.x += moveX * 0.15;
+      player.position.z += moveZ * 0.15;
 
-      // limites de déplacement
-      player.position.x = Math.max(Math.min(player.position.x, 40), -40);
-      player.position.z = Math.max(Math.min(player.position.z, 40), -40);
+      // Limite de l’espace
+      player.position.x = Math.max(-maxBoundary, Math.min(maxBoundary, player.position.x));
+      player.position.z = Math.max(-maxBoundary, Math.min(maxBoundary, player.position.z));
+
+      // Rotation des anneaux
+      player.children.forEach(child => {
+        if (child.geometry.type === 'TorusGeometry') {
+          child.rotation.z += 0.01;
+        }
+      });
 
       camera.position.x = player.position.x;
       camera.position.z = player.position.z + 5;
       camera.lookAt(player.position);
 
-      fragments.forEach((f, i) => {
-        f.position.y = 0.5 + Math.sin(Date.now() * 0.002 + i) * 0.2;
-        if (f.visible && player.position.distanceTo(f.position) < 1) {
-          f.visible = false;
+      // Collision fragments
+      fragments.forEach(frag => {
+        if (frag.visible && player.position.distanceTo(frag.position) < 1) {
+          frag.visible = false;
           collected++;
           if (collected === 3) showEnd();
+        }
+      });
+
+      // Ennemis
+      enemyTimer++;
+      if (enemyTimer % 120 === 0) spawnEnemy();
+
+      enemies.forEach(enemy => {
+        const dir = new THREE.Vector3().subVectors(player.position, enemy.position).normalize();
+        enemy.position.addScaledVector(dir, 0.03);
+        if (enemy.position.distanceTo(player.position) < 0.8) {
+          alert("Le Rêveur a été rattrapé par une entité du Néant...");
+          location.reload();
         }
       });
 
@@ -133,7 +196,7 @@
 
     function showEnd() {
       const msg = document.createElement("div");
-      msg.innerHTML = "<h1 style='color:white;text-align:center;'>Vous avez rassemblé les 3 fragments.<br>Le Rêveur s’éveille...</h1>";
+      msg.innerHTML = "<h1 style='color:white;text-align:center;'>Les fragments sont réunis.<br>Le Rêveur s’éveille...</h1>";
       msg.style.position = "absolute";
       msg.style.top = "50%";
       msg.style.left = "50%";
@@ -142,12 +205,12 @@
       document.body.appendChild(msg);
     }
 
-    // Contrôle tactile (joystick)
+    // Joystick mobile
     const joystick = document.getElementById("joystick");
     const stick = document.getElementById("stick");
     let dragging = false;
 
-    joystick.addEventListener("touchstart", e => { dragging = true; });
+    joystick.addEventListener("touchstart", () => { dragging = true; });
     joystick.addEventListener("touchmove", e => {
       if (!dragging) return;
       const touch = e.touches[0];
@@ -161,8 +224,7 @@
     });
     joystick.addEventListener("touchend", () => {
       dragging = false;
-      moveX = 0;
-      moveZ = 0;
+      moveX = 0; moveZ = 0;
       stick.style.left = "30px";
       stick.style.top = "30px";
     });
