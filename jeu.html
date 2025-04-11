@@ -11,7 +11,7 @@
       position: absolute;
       top: 10px; left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       padding: 10px 20px;
       color: white;
       font-family: 'EB Garamond', serif;
@@ -36,15 +36,15 @@
     scene.fog = new THREE.Fog(0x0d0b1f, 10, 50);
     const ui = document.getElementById("ui");
 
-    // Lumières
-    scene.add(new THREE.AmbientLight(0xd9b3ff, 1.2));
-    const pointLight = new THREE.PointLight(0xff66cc, 1, 100);
-    pointLight.position.set(10, 15, 10);
-    scene.add(pointLight);
+    // Lumière
+    scene.add(new THREE.AmbientLight(0xd9b3ff, 1));
+    const light = new THREE.PointLight(0xffccff, 1.5, 30);
+    light.position.set(0, 5, 0);
+    scene.add(light);
 
     // Sol voxel
     const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x282043 });
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x201a40 });
     for (let x = -6; x <= 6; x++) {
       for (let z = -6; z <= 6; z++) {
         const cube = new THREE.Mesh(boxGeo, groundMat);
@@ -53,15 +53,14 @@
       }
     }
 
-    // Fragments mystiques
-    const fragmentMat = new THREE.MeshStandardMaterial({ color: 0xffccff, emissive: 0xaa66ff, emissiveIntensity: 1 });
+    // Fragments
+    const fragmentMat = new THREE.MeshStandardMaterial({ color: 0xffccff, emissive: 0xaa66ff });
     const fragments = [];
     const fragmentPositions = [
       [3, 0, -2],
       [-4, 0, 1],
       [0, 0, 4]
     ];
-
     fragmentPositions.forEach(pos => {
       const frag = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), fragmentMat.clone());
       frag.position.set(...pos);
@@ -71,7 +70,8 @@
     });
 
     // Caméra
-    camera.position.set(0, 1.2, 5);
+    camera.position.set(0, 1.5, 8);
+    camera.lookAt(0, 0, 0);
     let yaw = 0, pitch = 0;
     let touchStartX = 0, touchStartY = 0;
     let collected = 0;
@@ -91,9 +91,9 @@
             ui.innerText = `Fragment ${collected} récupéré...`;
           } else {
             ui.innerText = "Les fragments sont réunis. Le Rêveur s’éveille...";
-            const light = new THREE.PointLight(0xffffff, 2, 50);
-            light.position.set(0, 3, 0);
-            scene.add(light);
+            const finalLight = new THREE.PointLight(0xffffff, 2, 50);
+            finalLight.position.set(0, 3, 0);
+            scene.add(finalLight);
           }
         }
       });
@@ -102,7 +102,6 @@
 
     animate();
 
-    // Touches tactiles pour vue immersive + déplacement
     document.addEventListener("touchstart", e => {
       if (e.touches.length === 1) {
         touchStartX = e.touches[0].clientX;
@@ -124,7 +123,7 @@
         camera.rotation.y = yaw;
         camera.rotation.x = pitch;
 
-        camera.translateZ(-0.1);
+        camera.translateZ(-0.08);
       }
     });
 
