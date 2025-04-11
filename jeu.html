@@ -2,123 +2,176 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Le Sanctuaire du Rêveur</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background-color: #0d0b1f;
       font-family: 'EB Garamond', serif;
-    }
-    #overlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      color: white;
-      font-size: 1.5em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 10;
-      text-align: center;
-      padding: 2em;
-    }
-    #startBtn {
-      margin-top: 1em;
-      padding: 0.5em 1.5em;
-      background-color: #a366ff;
-      border: none;
-      border-radius: 5px;
-      font-size: 1em;
-      color: white;
-      cursor: pointer;
+      background: #0d0b1f;
     }
     canvas {
       display: block;
     }
+    #intro {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 1em 2em;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 10;
+    }
+    #joystick {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      touch-action: none;
+      z-index: 10;
+    }
+    #stick {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      position: absolute;
+      top: 30px;
+      left: 30px;
+    }
   </style>
 </head>
 <body>
-  <div id="overlay">
-    <p>*Vous êtes dans le sanctuaire du Rêveur...<br>Trouvez les 3 fragments d’éveil.*</p>
-    <button id="startBtn">Commencer</button>
+  <div id="intro">
+    *Vous êtes dans le sanctuaire du Rêveur...<br>Trouvez les 3 fragments d’éveil.*<br><br>
+    <button onclick="startGame()">Commencer</button>
   </div>
+  <div id="joystick"><div id="stick"></div></div>
   <canvas id="gameCanvas"></canvas>
 
-  <!-- Import Three.js en script classique -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script>
+    let scene, camera, renderer, player, light;
+    let fragments = [], collected = 0;
+    let moveX = 0, moveZ = 0;
+
     const canvas = document.getElementById("gameCanvas");
-    const renderer = new THREE.WebGLRenderer({ canvas });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0d0b1f");
+    const intro = document.getElementById("intro");
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2, 5);
-
-    const light = new THREE.PointLight(0xffffff, 1, 100);
-    light.position.set(10, 10, 10);
-    scene.add(light);
-
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshStandardMaterial({ color: "#a366ff" });
-    const player = new THREE.Mesh(geometry, material);
-    scene.add(player);
-
-    const fragments = [];
-    for (let i = 0; i < 3; i++) {
-      const frag = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 32, 32),
-        new THREE.MeshStandardMaterial({ color: "#9933ff", emissive: "#ff99ff" })
-      );
-      frag.position.set(Math.random() * 10 - 5, 0.5, Math.random() * 10 - 5);
-      scene.add(frag);
-      fragments.push(frag);
+    function startGame() {
+      intro.style.display = "none";
+      init();
+      animate();
     }
 
-    let keys = {};
-    window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
-    window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
 
-    function movePlayer() {
-      if (keys["z"] || keys["arrowup"]) player.position.z -= 0.1;
-      if (keys["s"] || keys["arrowdown"]) player.position.z += 0.1;
-      if (keys["q"] || keys["arrowleft"]) player.position.x -= 0.1;
-      if (keys["d"] || keys["arrowright"]) player.position.x += 0.1;
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshStandardMaterial({ color: 0x6633aa });
+      player = new THREE.Mesh(geometry, material);
+      scene.add(player);
+
+      const floorGeometry = new THREE.PlaneGeometry(100, 100);
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1f102f });
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      scene.add(floor);
+
+      light = new THREE.PointLight(0xff00ff, 2, 30);
+      light.position.set(0, 5, 5);
+      scene.add(light);
+
+      camera.position.z = 5;
+      camera.position.y = 5;
+      camera.lookAt(player.position);
+
+      for (let i = 0; i < 3; i++) {
+        const frag = new THREE.Mesh(
+          new THREE.SphereGeometry(0.4, 16, 16),
+          new THREE.MeshStandardMaterial({ color: 0xffaaff, emissive: 0x7722aa })
+        );
+        frag.position.set((Math.random() - 0.5) * 20, 0.5, (Math.random() - 0.5) * 20);
+        fragments.push(frag);
+        scene.add(frag);
+      }
     }
-
-    let collected = 0;
 
     function animate() {
       requestAnimationFrame(animate);
-      movePlayer();
+      light.position.x = Math.sin(Date.now() * 0.001) * 10;
+      light.position.z = Math.cos(Date.now() * 0.001) * 10;
 
-      fragments.forEach((frag) => {
-        if (!frag.visible) return;
-        const dist = frag.position.distanceTo(player.position);
-        if (dist < 1) {
-          frag.visible = false;
+      player.position.x += moveX * 0.1;
+      player.position.z += moveZ * 0.1;
+
+      camera.position.x = player.position.x;
+      camera.position.z = player.position.z + 5;
+      camera.lookAt(player.position);
+
+      fragments.forEach((f, i) => {
+        if (f.visible && player.position.distanceTo(f.position) < 1) {
+          f.visible = false;
           collected++;
-          if (collected === 3) {
-            alert("Vous avez trouvé les 3 fragments d’éveil.");
-            location.reload();
-          }
+          if (collected === 3) showEnd();
         }
       });
 
       renderer.render(scene, camera);
     }
 
-    document.getElementById("startBtn").onclick = () => {
-      document.getElementById("overlay").style.display = "none";
-      animate();
-    };
+    function showEnd() {
+      const msg = document.createElement("div");
+      msg.innerHTML = "<h1 style='color:white;text-align:center;'>Vous avez rassemblé les 3 fragments.<br>Le Rêveur s’éveille...</h1>";
+      msg.style.position = "absolute";
+      msg.style.top = "50%";
+      msg.style.left = "50%";
+      msg.style.transform = "translate(-50%, -50%)";
+      msg.style.zIndex = "15";
+      document.body.appendChild(msg);
+    }
+
+    // Joystick
+    const joystick = document.getElementById("joystick");
+    const stick = document.getElementById("stick");
+
+    let dragging = false;
+
+    joystick.addEventListener("touchstart", e => {
+      dragging = true;
+    });
+
+    joystick.addEventListener("touchmove", e => {
+      if (!dragging) return;
+      const touch = e.touches[0];
+      const rect = joystick.getBoundingClientRect();
+      const dx = touch.clientX - rect.left - 50;
+      const dy = touch.clientY - rect.top - 50;
+      stick.style.left = `${dx + 30}px`;
+      stick.style.top = `${dy + 30}px`;
+
+      moveX = dx / 50;
+      moveZ = dy / 50;
+    });
+
+    joystick.addEventListener("touchend", () => {
+      dragging = false;
+      moveX = 0;
+      moveZ = 0;
+      stick.style.left = "30px";
+      stick.style.top = "30px";
+    });
 
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
