@@ -49,9 +49,10 @@
   </div>
   <canvas id="gameCanvas"></canvas>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.skypack.dev/three@0.150.0';
+  <!-- Import Three.js en script classique -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
 
+  <script>
     const canvas = document.getElementById("gameCanvas");
     const renderer = new THREE.WebGLRenderer({ canvas });
     renderer.setSize(window.innerWidth, window.innerHeight);
