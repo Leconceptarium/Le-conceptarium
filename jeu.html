@@ -23,112 +23,116 @@
       text-align: center;
       z-index: 10;
     }
-    canvas {
-      display: block;
+    canvas { display: block; }
+    button {
+      margin-top: 1em;
+      padding: 0.5em 1.2em;
+      background: #a366ff;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
     }
   </style>
 </head>
 <body>
-<div id="intro">
-  *Vous êtes dans le sanctuaire du Rêveur...<br>Trouvez les 3 fragments d’éveil.*
-  <br><br><button onclick="startGame()">Commencer</button>
-</div>
-<canvas id="c"></canvas>
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+  <div id="intro">
+    *Vous êtes dans le sanctuaire du Rêveur...<br>Trouvez les 3 fragments d’éveil.*
+    <br><br><button onclick="startGame()">Commencer</button>
+  </div>
+  <canvas id="c"></canvas>
 
-let camera, scene, renderer, controls, player;
-let fragments = [];
-let collected = 0;
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
 
-const fragmentCount = 3;
-const canvas = document.getElementById("c");
+  <script>
+    let camera, scene, renderer, controls;
+    let fragments = [];
+    let collected = 0;
+    const fragmentCount = 3;
 
-function init() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0d0b1f);
-
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 5, 10);
-
-  renderer = new THREE.WebGLRenderer({ canvas });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.enablePan = false;
-  controls.maxPolarAngle = Math.PI / 2;
-  controls.minDistance = 2;
-  controls.maxDistance = 15;
-
-  // Sol
-  const groundGeo = new THREE.PlaneGeometry(50, 50);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
-
-  // Lumière
-  const light = new THREE.PointLight(0xffffff, 1, 100);
-  light.position.set(10, 15, 10);
-  scene.add(light);
-  scene.add(new THREE.AmbientLight(0x8888ff, 0.4));
-
-  // Fragments d’éveil
-  const fragmentGeo = new THREE.IcosahedronGeometry(0.5, 0);
-  const fragmentMat = new THREE.MeshStandardMaterial({ color: 0xcc99ff, emissive: 0x6633aa });
-
-  for (let i = 0; i < fragmentCount; i++) {
-    const mesh = new THREE.Mesh(fragmentGeo, fragmentMat);
-    mesh.position.set(
-      (Math.random() - 0.5) * 30,
-      0.5,
-      (Math.random() - 0.5) * 30
-    );
-    scene.add(mesh);
-    fragments.push(mesh);
-  }
-
-  // Joueur = caméra
-  animate();
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-
-  // Collision simple
-  fragments.forEach((frag, idx) => {
-    if (frag.visible) {
-      const dist = camera.position.distanceTo(frag.position);
-      if (dist < 1.5) {
-        frag.visible = false;
-        collected++;
-        if (collected === fragmentCount) {
-          setTimeout(() => {
-            alert("Les fragments ont été réunis... Vous êtes éveillé.");
-            location.reload();
-          }, 500);
-        }
-      }
+    function startGame() {
+      document.getElementById("intro").style.display = "none";
+      init();
     }
-  });
 
-  renderer.render(scene, camera);
-}
+    function init() {
+      const canvas = document.getElementById("c");
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0d0b1f);
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 5, 10);
 
-window.startGame = () => {
-  document.getElementById("intro").style.display = "none";
-  init();
-};
-</script>
+      renderer = new THREE.WebGLRenderer({ canvas });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.enablePan = false;
+      controls.maxPolarAngle = Math.PI / 2;
+      controls.minDistance = 2;
+      controls.maxDistance = 15;
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50),
+        new THREE.MeshStandardMaterial({ color: 0x1a1a2e })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
+
+      const light = new THREE.PointLight(0xffffff, 1, 100);
+      light.position.set(10, 15, 10);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0x8888ff, 0.4));
+
+      const fragmentGeo = new THREE.IcosahedronGeometry(0.5, 0);
+      const fragmentMat = new THREE.MeshStandardMaterial({ color: 0xcc99ff, emissive: 0x6633aa });
+
+      for (let i = 0; i < fragmentCount; i++) {
+        const mesh = new THREE.Mesh(fragmentGeo, fragmentMat);
+        mesh.position.set(
+          (Math.random() - 0.5) * 30,
+          0.5,
+          (Math.random() - 0.5) * 30
+        );
+        scene.add(mesh);
+        fragments.push(mesh);
+      }
+
+      animate();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+
+      fragments.forEach(frag => {
+        if (frag.visible) {
+          const dist = camera.position.distanceTo(frag.position);
+          if (dist < 1.5) {
+            frag.visible = false;
+            collected++;
+            if (collected === fragmentCount) {
+              setTimeout(() => {
+                alert("Les fragments ont été réunis... Vous êtes éveillé.");
+                location.reload();
+              }, 500);
+            }
+          }
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.startGame = startGame;
+  </script>
 </body>
 </html>
