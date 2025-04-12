@@ -57,18 +57,36 @@
       opacity: 0;
       transition: opacity 1s;
     }
+    #powerButton {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #ffff66;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 0 15px #ffff66;
+    }
   </style>
 </head>
 <body>
   <h1>Le Sanctuaire du Rêveur</h1>
   <div id="progress"><div id="progress-bar"></div></div>
   <div id="phrase"></div>
+  <button id="powerButton">Pouvoir du Rêveur</button>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const progressBar = document.getElementById('progress-bar');
     const phraseEl = document.getElementById('phrase');
+    const powerButton = document.getElementById('powerButton');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -94,16 +112,28 @@
     let absorbedBots = 0;
     const targetAbsorbed = 10;
     let gameRunning = true;
+    let hasPower = false;
 
     function spawnFragments() {
-      for (let i = 0; i < 30; i++) {
-        const isTrap = Math.random() < 0.1;
+      for (let i = 0; i < 15; i++) {
+        const rand = Math.random();
+        let color = '#ff0055';
+        let trap = false;
+        let rare = false;
+        if (rand < 0.05) {
+          color = '#ffff66'; // fragment rare
+          rare = true;
+        } else if (rand < 0.15) {
+          color = '#00ffff'; // fragment piégé
+          trap = true;
+        }
         fragments.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           radius: 6,
-          color: isTrap ? '#00ffff' : '#ff0055',
-          trap: isTrap
+          color,
+          trap,
+          rare
         });
       }
     }
@@ -157,10 +187,26 @@
       setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
     }
 
+    function activatePower() {
+      powerButton.style.display = 'none';
+      hasPower = false;
+      bots.forEach(bot => {
+        const d = distance(player, bot);
+        if (d < 150) {
+          const dx = bot.x - player.x;
+          const dy = bot.y - player.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0) {
+            bot.x += (dx / dist) * 50;
+            bot.y += (dy / dist) * 50;
+          }
+        }
+      });
+    }
+
     function updateGame() {
       if (!gameRunning) return;
 
-      // Lissage fluide
       player.x += (mouse.x - player.x) * 0.08;
       player.y += (mouse.y - player.y) * 0.08;
 
@@ -180,12 +226,16 @@
 
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
-          if (f.trap) {
+          if (f.rare) {
+            hasPower = true;
+            powerButton.style.display = 'block';
+            showPhrase("Un pouvoir ancien s'éveille...");
+          } else if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
-            showPhrase("Un fragment piégé...");
+            if (Math.random() < 0.5) showPhrase("Un fragment piégé...");
           } else {
             player.radius += 1;
-            showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
+            if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
           return false;
         }
@@ -227,8 +277,8 @@
       drawCircle(player);
 
       frame++;
-      if (frame % 500 === 0) spawnFragments();
-      if (frame % 1800 === 0) spawnBot();
+      if (frame % 600 === 0) spawnFragments();
+      if (frame % 1200 === 0) spawnBot();
 
       if (absorbedBots >= targetAbsorbed) {
         alert("Tu as triomphé des entités du rêve...");
@@ -246,6 +296,8 @@
       frame = 0;
       absorbedBots = 0;
       gameRunning = true;
+      hasPower = false;
+      powerButton.style.display = 'none';
       progressBar.style.width = '0%';
       spawnFragments();
       for (let i = 0; i < 4; i++) spawnBot();
@@ -263,6 +315,7 @@
       }
     }, { passive: false });
 
+    powerButton.addEventListener('click', activatePower);
     resetGame();
   </script>
 </body>
