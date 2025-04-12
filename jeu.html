@@ -3,20 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mini-Jeu .io Mystique</title>
+  <title>Sanctuaire Mystique</title>
   <style>
-    body, html {
+    @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap');
+    html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%);
+      background: radial-gradient(circle at center, #15002b 0%, #000010 100%);
+      font-family: 'Unbounded', sans-serif;
     }
     canvas {
       display: block;
     }
+    h1 {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 28px;
+      z-index: 10;
+      pointer-events: none;
+      text-shadow: 0 0 10px #ff00cc;
+    }
   </style>
 </head>
 <body>
+  <h1>Le Sanctuaire du Rêveur</h1>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
@@ -27,24 +41,23 @@
     let player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
-      radius: 20,
-      color: 'white',
-      speed: 3
+      radius: 15,
+      color: '#ffffff',
+      speed: 2.8
     };
 
     let fragments = [];
     let bots = [];
-    let wave = 1;
     let frame = 0;
 
     function spawnFragments() {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         fragments.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          radius: 5,
-          color: Math.random() > 0.2 ? 'red' : 'purple',
-          trap: Math.random() < 0.2
+          radius: 6,
+          color: Math.random() < 0.15 ? '#00ffff' : '#ff0055',
+          trap: Math.random() < 0.15
         });
       }
     }
@@ -53,52 +66,47 @@
       bots.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: 15,
-        color: 'blue',
-        speed: 1.5
+        radius: 25 + Math.random() * 10,
+        color: '#9933ff',
+        speed: 1.2 + Math.random()
       });
     }
 
-    function drawPlayer() {
+    function drawCircle(entity) {
       ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-      ctx.fillStyle = player.color;
+      ctx.arc(entity.x, entity.y, entity.radius, 0, Math.PI * 2);
+      ctx.fillStyle = entity.color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = entity.color;
       ctx.fill();
-    }
-
-    function drawFragments() {
-      for (let f of fragments) {
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
-        ctx.fillStyle = f.color;
-        ctx.fill();
-      }
-    }
-
-    function drawBots() {
-      for (let b of bots) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.fillStyle = b.color;
-        ctx.fill();
-      }
+      ctx.shadowBlur = 0;
     }
 
     function distance(a, b) {
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
-    function moveBots() {
-      for (let b of bots) {
-        let dx = player.x - b.x;
-        let dy = player.y - b.y;
-        let dist = Math.hypot(dx, dy);
-        b.x += (dx / dist) * b.speed;
-        b.y += (dy / dist) * b.speed;
+    function moveToward(entity, target, speed) {
+      let dx = target.x - entity.x;
+      let dy = target.y - entity.y;
+      let dist = Math.hypot(dx, dy);
+      if (dist > 0) {
+        entity.x += (dx / dist) * speed;
+        entity.y += (dy / dist) * speed;
       }
     }
 
-    function collectFragments() {
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fragments.forEach(drawCircle);
+      bots.forEach(drawCircle);
+      drawCircle(player);
+    }
+
+    function updateGame() {
+      moveToward(player, mouse, player.speed);
+      bots.forEach(bot => moveToward(bot, player, bot.speed));
+
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
           if (f.trap) {
@@ -110,58 +118,47 @@
         }
         return true;
       });
-    }
 
-    function botCollectsFragments() {
-      for (let b of bots) {
+      for (let bot of bots) {
         fragments = fragments.filter(f => {
-          if (distance(f, b) < b.radius + f.radius) {
-            b.radius += 1;
+          if (distance(f, bot) < bot.radius + f.radius) {
+            bot.radius += 0.5;
             return false;
           }
           return true;
         });
       }
-    }
 
-    function checkCollisions() {
-      bots = bots.filter(b => {
-        if (distance(player, b) < player.radius + b.radius) {
-          if (player.radius > b.radius) {
-            player.radius += b.radius / 2;
-            return false;
+      for (let bot of bots) {
+        if (distance(player, bot) < player.radius + bot.radius) {
+          if (player.radius > bot.radius) {
+            player.radius += bot.radius / 2;
+            bot.radius = 0;
           } else {
-            alert("Tu as été absorbé !");
-            player.radius = 20;
-            bots = [];
-            fragments = [];
-            wave = 1;
-            spawnFragments();
-            return false;
+            alert("Tu as été absorbé par une entité onirique...");
+            resetGame();
+            return;
           }
         }
-        return true;
-      });
-    }
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawFragments();
-      drawBots();
-      drawPlayer();
-      moveBots();
-      collectFragments();
-      botCollectsFragments();
-      checkCollisions();
-
-      frame++;
-      if (frame % 300 === 0) {
-        wave++;
-        for (let i = 0; i < wave; i++) spawnBot();
-        spawnFragments();
       }
 
-      requestAnimationFrame(gameLoop);
+      drawGame();
+      frame++;
+      if (frame % 500 === 0) {
+        spawnFragments();
+        spawnBot();
+      }
+
+      requestAnimationFrame(updateGame);
+    }
+
+    function resetGame() {
+      player.radius = 15;
+      fragments = [];
+      bots = [];
+      frame = 0;
+      spawnFragments();
+      for (let i = 0; i < 3; i++) spawnBot();
     }
 
     let mouse = { x: player.x, y: player.y };
@@ -176,21 +173,8 @@
       }
     }, { passive: false });
 
-    function updatePlayer() {
-      let dx = mouse.x - player.x;
-      let dy = mouse.y - player.y;
-      let dist = Math.hypot(dx, dy);
-      if (dist > 1) {
-        player.x += (dx / dist) * player.speed;
-        player.y += (dy / dist) * player.speed;
-      }
-      requestAnimationFrame(updatePlayer);
-    }
-
-    spawnFragments();
-    spawnBot();
-    gameLoop();
-    updatePlayer();
+    resetGame();
+    updateGame();
   </script>
 </body>
 </html>
