@@ -177,7 +177,51 @@
         angle: Math.random() * 2 * Math.PI
       });
     }
-        function updateGame() {
+
+    function moveEntityToward(entity, target, speed) {
+      const dx = target.x - entity.x;
+      const dy = target.y - entity.y;
+      const angle = Math.atan2(dy, dx);
+      entity.x += Math.cos(angle) * speed;
+      entity.y += Math.sin(angle) * speed;
+    }
+        function repelBots() {
+      bots.forEach(bot => {
+        if (distance(player, bot) < 250) {
+          const dx = bot.x - player.x;
+          const dy = bot.y - player.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0) {
+            bot.x += (dx / dist) * 60;
+            bot.y += (dy / dist) * 60;
+          }
+        }
+      });
+    }
+
+    function activatePower() {
+      if (!powerActive) return;
+      repelBots();
+    }
+
+    function startPower() {
+      powerActive = true;
+      powerButton.style.display = "block";
+      showPhrase("Un pouvoir ancien s'éveille...");
+      if (powerTimeout) clearTimeout(powerTimeout);
+      powerTimeout = setTimeout(() => {
+        powerActive = false;
+        powerButton.style.display = "none";
+      }, 2000);
+    }
+
+    function moveWanderer(bot) {
+      bot.x += Math.cos(bot.angle) * bot.speed;
+      bot.y += Math.sin(bot.angle) * bot.speed;
+      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
+    }
+
+    function updateGame() {
       moveEntityToward(player, mouse, player.speed);
 
       bots.forEach(bot => {
@@ -198,7 +242,7 @@
             player.radius += 1;
             if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
-          spawnFragment(); // Nouveau fragment immédiat
+          spawnFragment();
           return false;
         }
         return true;
@@ -208,14 +252,14 @@
         fragments = fragments.filter(f => {
           if (distance(f, bot) < bot.radius + f.radius) {
             bot.radius += 0.4;
-            spawnFragment(); // Nouveau fragment immédiat
+            spawnFragment();
             return false;
           }
           return true;
         });
       }
 
-      // S'assurer qu'il y a toujours au moins 10 fragments
+      // Assurer un minimum de 10 fragments
       while (fragments.length < 10) {
         spawnFragment();
       }
@@ -247,3 +291,34 @@
       if (frame % 600 === 0) spawnBot();
       requestAnimationFrame(updateGame);
     }
+
+    function resetGame() {
+      player.radius = 15;
+      fragments = [];
+      bots = [];
+      frame = 0;
+      absorbedBots = 0;
+      powerActive = false;
+      powerButton.style.display = "none";
+      progressBar.style.width = "0%";
+      for (let i = 0; i < 10; i++) spawnFragment();
+      for (let i = 0; i < 4; i++) spawnBot();
+      updateGame();
+    }
+
+    canvas.addEventListener("mousemove", e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    canvas.addEventListener("touchmove", e => {
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    }, { passive: false });
+
+    powerButton.addEventListener("click", activatePower);
+    resetGame();
+  </script>
+</body>
+</html>
