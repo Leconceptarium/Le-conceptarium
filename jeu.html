@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Le Sanctuaire du Rêveur</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap');
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: radial-gradient(circle at center, #15002b 0%, #000010 100%);
-      font-family: 'Unbounded', sans-serif;
+      background: radial-gradient(circle at center, #15002b, #000010);
+      font-family: sans-serif;
     }
     canvas {
       display: block;
@@ -73,52 +72,29 @@
     const phraseEl = document.getElementById("phrase");
     const progressBar = document.getElementById("progress-bar");
 
-    let player = {
+    let lastTime = performance.now();
+
+    const player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
       radius: 15,
-      speed: 2.2,
-      color: "#ffffff"
+      color: "#ffffff",
+      speed: 100 // px/sec
     };
 
     let mouse = { x: player.x, y: player.y };
     let fragments = [];
     let bots = [];
-    let frame = 0;
     let powerActive = false;
     let powerTimer = 0;
     let absorbedBots = 0;
     const targetAbsorbed = 10;
 
-    const phrases = [
-      "Un souvenir oublié...",
-      "Une étincelle s’éveille...",
-      "L’un des leurs a chuté...",
-      "Le rêve devient lucide...",
-      "Tu grandis dans l’ombre..."
-    ];
-
-    function showPhrase(text) {
-      phraseEl.textContent = text;
-      phraseEl.style.opacity = 1;
-      setTimeout(() => {
-        phraseEl.style.opacity = 0;
-      }, 2000);
-    }
-
-    function drawAura(x, y, r, color) {
-      const gradient = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.5);
-      gradient.addColorStop(0, color);
-      gradient.addColorStop(1, "transparent");
-      ctx.beginPath();
-      ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
     function drawCircle(e) {
-      const auraColor = powerActive && e === player ? "rgba(255,255,100,0.3)" : "rgba(255,255,255,0.08)";
-      drawAura(e.x, e.y, e.radius, auraColor);
       ctx.beginPath();
       ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
       ctx.fillStyle = e.color;
@@ -128,25 +104,14 @@
       ctx.shadowBlur = 0;
     }
 
-    function drawShockwave(x, y, radius) {
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(255,255,150,0.2)";
-      ctx.lineWidth = 6;
-      ctx.stroke();
-    }
-
-    function distance(a, b) {
-      return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    function moveToward(entity, target, speed) {
+    function moveTowardFixed(entity, target, speed, delta) {
       const dx = target.x - entity.x;
       const dy = target.y - entity.y;
       const dist = Math.hypot(dx, dy);
       if (dist > 0) {
-        entity.x += (dx / dist) * speed;
-        entity.y += (dy / dist) * speed;
+        const move = speed * delta;
+        entity.x += (dx / dist) * move;
+        entity.y += (dy / dist) * move;
       }
     }
 
@@ -172,11 +137,11 @@
         y: Math.random() * canvas.height,
         radius: 20 + Math.random() * 10,
         color: isHunter ? "#9933ff" : "#00ccff",
-        speed: 2.2,
+        speed: isHunter ? 110 : 80, // px/sec
         type: isHunter ? "hunter" : "wanderer"
       });
     }
-        function repelBots() {
+        function repelBots(delta) {
       bots.forEach(bot => {
         const d = distance(player, bot);
         if (d < 200) {
@@ -184,47 +149,59 @@
           const dy = bot.y - player.y;
           const dist = Math.hypot(dx, dy);
           if (dist > 0) {
-            bot.x += (dx / dist) * 12;
-            bot.y += (dy / dist) * 12;
+            bot.x += (dx / dist) * 200 * delta;
+            bot.y += (dy / dist) * 200 * delta;
           }
         }
       });
     }
 
-    function updateGame() {
-      moveToward(player, mouse, player.speed);
+    function drawShockwave(x, y, radius) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255,255,150,0.2)";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    }
 
+    function gameLoop(now) {
+      const delta = (now - lastTime) / 1000;
+      lastTime = now;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // joueur
+      moveTowardFixed(player, mouse, player.speed, delta);
+
+      // bots
       bots.forEach(bot => {
         if (bot.type === "hunter") {
-          moveToward(bot, player, bot.speed);
+          moveTowardFixed(bot, player, bot.speed, delta);
         } else {
-          // bots errants visent les fragments
+          // errant : cherche fragment le plus proche
           let closest = null;
           let minDist = Infinity;
-          fragments.forEach(f => {
-            const d = distance(bot, f);
+          fragments.forEach(frag => {
+            const d = distance(bot, frag);
             if (d < minDist) {
               minDist = d;
-              closest = f;
+              closest = frag;
             }
           });
-          if (closest) moveToward(bot, closest, bot.speed);
+          if (closest) moveTowardFixed(bot, closest, bot.speed, delta);
         }
       });
 
-      // joueur mange fragments
+      // fragments mangés par le joueur
       fragments = fragments.filter(f => {
-        if (distance(f, player) < player.radius + f.radius) {
+        if (distance(player, f) < player.radius + f.radius) {
           if (f.rare) {
             powerActive = true;
-            powerTimer = 240; // 4 secondes
-            showPhrase("Un pouvoir ancien s’éveille...");
+            powerTimer = 4;
           } else if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
-            if (Math.random() < 0.5) showPhrase("Un fragment piégé...");
           } else {
             player.radius += 1;
-            if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
           spawnFragment();
           return false;
@@ -232,10 +209,10 @@
         return true;
       });
 
-      // bots mangent fragments
+      // fragments mangés par les bots
       for (let bot of bots) {
         fragments = fragments.filter(f => {
-          if (distance(f, bot) < bot.radius + f.radius) {
+          if (distance(bot, f) < bot.radius + f.radius) {
             if (f.trap) {
               bot.radius = Math.max(10, bot.radius / 2);
             } else {
@@ -250,7 +227,7 @@
 
       while (fragments.length < 10) spawnFragment();
 
-      // collision joueur vs bots
+      // collisions joueur vs bots
       bots = bots.filter(bot => {
         const isTouching = distance(player, bot) < player.radius + bot.radius;
         if (isTouching) {
@@ -258,7 +235,6 @@
             player.radius += bot.radius / 2;
             absorbedBots++;
             progressBar.style.width = (absorbedBots / targetAbsorbed * 100) + "%";
-            showPhrase("L’un des leurs a chuté...");
             return false;
           } else {
             alert("Tu as été absorbé...");
@@ -269,35 +245,33 @@
         return true;
       });
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // affichage
       fragments.forEach(drawCircle);
       bots.forEach(drawCircle);
       drawCircle(player);
 
       if (powerActive) {
         drawShockwave(player.x, player.y, player.radius + (Math.random() * 20 + 40));
-        repelBots();
-        powerTimer--;
+        repelBots(delta);
+        powerTimer -= delta;
         if (powerTimer <= 0) powerActive = false;
       }
 
-      frame++;
-      if (frame % 600 === 0) spawnBot();
-      requestAnimationFrame(updateGame);
+      requestAnimationFrame(gameLoop);
     }
 
     function resetGame() {
       player.radius = 15;
       fragments = [];
       bots = [];
-      frame = 0;
       absorbedBots = 0;
       powerActive = false;
       powerTimer = 0;
       progressBar.style.width = "0%";
       for (let i = 0; i < 10; i++) spawnFragment();
       for (let i = 0; i < 4; i++) spawnBot();
-      updateGame();
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
     }
 
     canvas.addEventListener("mousemove", e => {
