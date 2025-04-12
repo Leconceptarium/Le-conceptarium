@@ -45,7 +45,7 @@
       background: linear-gradient(to right, #ff00cc, #00ffff);
       transition: width 0.3s ease;
     }
-    #phrase {
+    #phrase, #success {
       position: absolute;
       bottom: 40px;
       left: 50%;
@@ -56,6 +56,12 @@
       z-index: 15;
       opacity: 0;
       transition: opacity 1s;
+    }
+    #success {
+      bottom: 80px;
+      color: #ffff66;
+      font-weight: bold;
+      text-shadow: 0 0 20px #ffff66;
     }
     #powerButton {
       position: absolute;
@@ -79,6 +85,7 @@
   <h1>Le Sanctuaire du Rêveur</h1>
   <div id="progress"><div id="progress-bar"></div></div>
   <div id="phrase"></div>
+  <div id="success"></div>
   <button id="powerButton">Pouvoir du Rêveur</button>
   <canvas id="gameCanvas"></canvas>
   <script>
@@ -86,6 +93,7 @@
     const ctx = canvas.getContext('2d');
     const progressBar = document.getElementById('progress-bar');
     const phraseEl = document.getElementById('phrase');
+    const successEl = document.getElementById('success');
     const powerButton = document.getElementById('powerButton');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -97,6 +105,8 @@
       "Tu grandis dans l'ombre...",
       "Le rêve devient lucide..."
     ];
+
+    const successes = new Set();
 
     let player = {
       x: canvas.width / 2,
@@ -110,33 +120,77 @@
     let bots = [];
     let frame = 0;
     let absorbedBots = 0;
+    let timeAlive = 0;
     const targetAbsorbed = 10;
     let gameRunning = true;
     let powerActive = false;
     let powerTimeout = null;
+    let botsToSpawn = 4;
+
+    function showPhrase(text) {
+      phraseEl.textContent = text;
+      phraseEl.style.opacity = 1;
+      setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
+    }
+
+    function showSuccess(text) {
+      if (successes.has(text)) return;
+      successes.add(text);
+      successEl.textContent = "Succès débloqué : " + text;
+      successEl.style.opacity = 1;
+      setTimeout(() => { successEl.style.opacity = 0; }, 3000);
+    }
+
+    function drawAura(x, y, r, color = 'rgba(255,255,255,0.15)') {
+      const gradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2.5);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    function drawCircle(e) {
+      const auraColor = (powerActive && e === player) ? 'rgba(255,255,100,0.4)' : 'rgba(255,255,255,0.1)';
+      drawAura(e.x, e.y, e.radius, auraColor);
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+      ctx.fillStyle = e.color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = e.color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function moveWanderer(bot) {
+      bot.x += Math.cos(bot.angle) * bot.speed;
+      bot.y += Math.sin(bot.angle) * bot.speed;
+      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
+    }
 
     function spawnFragments() {
-      for (let i = 0; i < 15; i++) {
-        const rand = Math.random();
-        let color = '#ff0055';
-        let trap = false;
-        let rare = false;
-        if (rand < 0.05) {
-          color = '#ffff66'; // rare
-          rare = true;
-        } else if (rand < 0.15) {
-          color = '#00ffff'; // piégé
-          trap = true;
-        }
-        fragments.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          radius: 6,
-          color,
-          trap,
-          rare
-        });
+      const rand = Math.random();
+      let color = '#ff0055';
+      let trap = false;
+      let rare = false;
+      if (rand < 0.05) {
+        color = '#ffff66'; rare = true;
+      } else if (rand < 0.3) {
+        color = '#00ffff'; trap = true;
       }
+      fragments.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 6,
+        color,
+        trap,
+        rare
+      });
     }
 
     function spawnBot() {
@@ -151,54 +205,16 @@
         angle: Math.random() * 2 * Math.PI
       });
     }
-
-    function drawAura(x, y, r, color = 'rgba(255,255,255,0.15)') {
-      const gradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2);
-      gradient.addColorStop(0, color);
-      gradient.addColorStop(1, 'transparent');
-      ctx.beginPath();
-      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-    }
-
-    function drawCircle(e) {
-      const auraColor = (powerActive && e === player) ? 'rgba(255,255,100,0.4)' : 'rgba(255,255,255,0.15)';
-      drawAura(e.x, e.y, e.radius, auraColor);
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-      ctx.fillStyle = e.color;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = e.color;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-        function distance(a, b) {
-      return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    function moveWanderer(bot) {
-      bot.x += Math.cos(bot.angle) * bot.speed;
-      bot.y += Math.sin(bot.angle) * bot.speed;
-      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
-    }
-
-    function showPhrase(text) {
-      phraseEl.textContent = text;
-      phraseEl.style.opacity = 1;
-      setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
-    }
-
-    function repelBots() {
+        function repelBots() {
       bots.forEach(bot => {
         const d = distance(player, bot);
-        if (d < 150) {
+        if (d < 250) {
           const dx = bot.x - player.x;
           const dy = bot.y - player.y;
           const dist = Math.hypot(dx, dy);
           if (dist > 0) {
-            bot.x += (dx / dist) * 50;
-            bot.y += (dy / dist) * 50;
+            bot.x += (dx / dist) * 60;
+            bot.y += (dy / dist) * 60;
           }
         }
       });
@@ -213,6 +229,7 @@
       powerActive = true;
       powerButton.style.display = 'block';
       showPhrase("Un pouvoir ancien s'éveille...");
+      showSuccess("Premier pouvoir absorbé");
       if (powerTimeout) clearTimeout(powerTimeout);
       powerTimeout = setTimeout(() => {
         powerActive = false;
@@ -222,6 +239,10 @@
 
     function updateGame() {
       if (!gameRunning) return;
+
+      timeAlive++;
+      if (timeAlive === 1800) showSuccess("Tu as survécu 30 secondes");
+      if (timeAlive === 3600) showSuccess("Tu as survécu 1 minute");
 
       player.x += (mouse.x - player.x) * 0.08;
       player.y += (mouse.y - player.y) * 0.08;
@@ -251,6 +272,7 @@
             player.radius += 1;
             if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
+          spawnFragments(); // un nouveau fragment à chaque fois
           return false;
         }
         return true;
@@ -273,6 +295,7 @@
           if (player.radius > bot.radius) {
             player.radius += bot.radius / 2;
             absorbedBots++;
+            if (absorbedBots === 5) showSuccess("5 bots absorbés");
             progressBar.style.width = (absorbedBots / targetAbsorbed * 100) + '%';
             showPhrase("L'un des leurs a chuté...");
             return false;
@@ -291,11 +314,17 @@
       drawCircle(player);
 
       frame++;
-      if (frame % 600 === 0) spawnFragments();
-      if (frame % 1200 === 0) spawnBot();
+      if (frame % 180 === 0) spawnFragments();
+      if (frame % 600 === 0) spawnBot();
+      if (frame % 1800 === 0) botsToSpawn++;
+
+      for (let i = 0; i < botsToSpawn; i++) {
+        if (frame % (3000 + i * 200) === 0) spawnBot();
+      }
 
       if (absorbedBots >= targetAbsorbed) {
         alert("Tu as triomphé des entités du rêve...");
+        showSuccess("Tu as atteint l'éveil");
         resetGame();
         return;
       }
@@ -309,12 +338,14 @@
       bots = [];
       frame = 0;
       absorbedBots = 0;
+      timeAlive = 0;
+      botsToSpawn = 4;
       gameRunning = true;
       powerActive = false;
       powerButton.style.display = 'none';
       progressBar.style.width = '0%';
       spawnFragments();
-      for (let i = 0; i < 4; i++) spawnBot();
+      for (let i = 0; i < botsToSpawn; i++) spawnBot();
       updateGame();
     }
 
