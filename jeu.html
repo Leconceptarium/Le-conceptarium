@@ -27,36 +27,14 @@
       pointer-events: none;
       text-shadow: 0 0 10px #ff00cc;
     }
-    #restartBtn {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 30px;
-      font-size: 20px;
-      background: #ff00cc;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      z-index: 20;
-      box-shadow: 0 0 20px #ff00cc;
-    }
-    #restartBtn:hover {
-      background: #e000b5;
-    }
   </style>
 </head>
 <body>
   <h1>Le Sanctuaire du Rêveur</h1>
-  <button id="restartBtn">Réveiller à nouveau</button>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const restartBtn = document.getElementById('restartBtn');
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -65,16 +43,18 @@
       y: canvas.height / 2,
       radius: 15,
       color: '#ffffff',
-      speed: 3.5
+      speed: 3.2
     };
 
     let fragments = [];
     let bots = [];
     let frame = 0;
+    let absorbedBots = 0;
+    const targetAbsorbed = 10;
     let gameRunning = true;
 
     function spawnFragments() {
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 30; i++) {
         const isTrap = Math.random() < 0.1;
         fragments.push({
           x: Math.random() * canvas.width,
@@ -87,21 +67,24 @@
     }
 
     function spawnBot() {
+      const isHunter = Math.random() < 0.5;
       bots.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: 25 + Math.random() * 10,
-        color: '#9933ff',
-        speed: 0.8 + Math.random() * 0.6
+        radius: 20 + Math.random() * 10,
+        color: isHunter ? '#9933ff' : '#00ccff',
+        speed: isHunter ? 1.4 : 0.6,
+        type: isHunter ? 'hunter' : 'wanderer',
+        angle: Math.random() * 2 * Math.PI
       });
     }
 
-    function drawCircle(entity) {
+    function drawCircle(e) {
       ctx.beginPath();
-      ctx.arc(entity.x, entity.y, entity.radius, 0, Math.PI * 2);
-      ctx.fillStyle = entity.color;
+      ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+      ctx.fillStyle = e.color;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = entity.color;
+      ctx.shadowColor = e.color;
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -110,14 +93,20 @@
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
-    function moveToward(entity, target, speed) {
-      let dx = target.x - entity.x;
-      let dy = target.y - entity.y;
-      let dist = Math.hypot(dx, dy);
+    function moveToward(e, target, speed) {
+      const dx = target.x - e.x;
+      const dy = target.y - e.y;
+      const dist = Math.hypot(dx, dy);
       if (dist > 0) {
-        entity.x += (dx / dist) * speed;
-        entity.y += (dy / dist) * speed;
+        e.x += (dx / dist) * speed;
+        e.y += (dy / dist) * speed;
       }
+    }
+
+    function moveWanderer(bot) {
+      bot.x += Math.cos(bot.angle) * bot.speed;
+      bot.y += Math.sin(bot.angle) * bot.speed;
+      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
     }
 
     function drawGame() {
@@ -131,7 +120,14 @@
       if (!gameRunning) return;
 
       moveToward(player, mouse, player.speed);
-      bots.forEach(bot => moveToward(bot, player, bot.speed));
+
+      bots.forEach(bot => {
+        if (bot.type === 'hunter') {
+          moveToward(bot, player, bot.speed);
+        } else {
+          moveWanderer(bot);
+        }
+      });
 
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
@@ -146,40 +142,45 @@
       });
 
       for (let bot of bots) {
-        fragments = fragments.filter(f => {
-          if (distance(f, bot) < bot.radius + f.radius) {
-            bot.radius += 0.5;
-            return false;
-          }
-          return true;
-        });
-      }
-
-      for (let bot of bots) {
-        if (distance(player, bot) < player.radius + bot.radius) {
-          if (player.radius > bot.radius) {
-            player.radius += bot.radius / 2;
-            bot.radius = 0;
-          } else {
-            gameOver();
-            return;
-          }
+        if (bot.type === 'wanderer') {
+          fragments = fragments.filter(f => {
+            if (distance(f, bot) < bot.radius + f.radius) {
+              bot.radius += 0.5;
+              return false;
+            }
+            return true;
+          });
         }
       }
 
+      bots = bots.filter(bot => {
+        if (distance(player, bot) < player.radius + bot.radius) {
+          if (player.radius > bot.radius) {
+            player.radius += bot.radius / 2;
+            absorbedBots++;
+            return false;
+          } else {
+            alert("Tu as été absorbé...");
+            resetGame();
+            return false;
+          }
+        }
+        return true;
+      });
+
       drawGame();
+
       frame++;
-      if (frame % 500 === 0) {
-        spawnFragments();
-        spawnBot();
+      if (frame % 500 === 0) spawnFragments();
+      if (frame % 1800 === 0) spawnBot();
+
+      if (absorbedBots >= targetAbsorbed) {
+        alert("Tu as triomphé des entités du rêve...");
+        resetGame();
+        return;
       }
 
       requestAnimationFrame(updateGame);
-    }
-
-    function gameOver() {
-      gameRunning = false;
-      restartBtn.style.display = 'block';
     }
 
     function resetGame() {
@@ -187,14 +188,12 @@
       fragments = [];
       bots = [];
       frame = 0;
+      absorbedBots = 0;
       gameRunning = true;
-      restartBtn.style.display = 'none';
       spawnFragments();
-      for (let i = 0; i < 3; i++) spawnBot();
+      for (let i = 0; i < 4; i++) spawnBot();
       updateGame();
     }
-
-    restartBtn.addEventListener('click', resetGame);
 
     let mouse = { x: player.x, y: player.y };
     canvas.addEventListener('mousemove', e => {
