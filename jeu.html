@@ -27,25 +27,7 @@
       pointer-events: none;
       text-shadow: 0 0 10px #ff00cc;
     }
-    #progress {
-      position: absolute;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 5px;
-      overflow: hidden;
-      z-index: 15;
-    }
-    #progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(to right, #ff00cc, #00ffff);
-      transition: width 0.3s ease;
-    }
-    #phrase, #success {
+    #phrase {
       position: absolute;
       bottom: 40px;
       left: 50%;
@@ -56,12 +38,6 @@
       z-index: 15;
       opacity: 0;
       transition: opacity 1s;
-    }
-    #success {
-      bottom: 80px;
-      color: #ffff66;
-      font-weight: bold;
-      text-shadow: 0 0 20px #ffff66;
     }
     #powerButton {
       position: absolute;
@@ -83,68 +59,44 @@
 </head>
 <body>
   <h1>Le Sanctuaire du Rêveur</h1>
-  <div id="progress"><div id="progress-bar"></div></div>
   <div id="phrase"></div>
-  <div id="success"></div>
   <button id="powerButton">Pouvoir du Rêveur</button>
   <canvas id="gameCanvas"></canvas>
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const progressBar = document.getElementById('progress-bar');
-    const phraseEl = document.getElementById('phrase');
-    const successEl = document.getElementById('success');
-    const powerButton = document.getElementById('powerButton');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const phrases = [
-      "Un souvenir oublié...",
-      "Une étincelle s'éveille...",
-      "L'un des leurs a chuté...",
-      "Tu grandis dans l'ombre...",
-      "Le rêve devient lucide..."
-    ];
-
-    const successes = new Set();
+    const phraseEl = document.getElementById("phrase");
+    const powerButton = document.getElementById("powerButton");
 
     let player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
       radius: 15,
-      color: '#ffffff'
+      color: "#ffffff"
     };
 
     let mouse = { x: player.x, y: player.y };
     let fragments = [];
     let bots = [];
     let frame = 0;
-    let absorbedBots = 0;
-    let timeAlive = 0;
-    const targetAbsorbed = 10;
-    let gameRunning = true;
     let powerActive = false;
     let powerTimeout = null;
-    let botsToSpawn = 4;
 
     function showPhrase(text) {
       phraseEl.textContent = text;
       phraseEl.style.opacity = 1;
-      setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
+      setTimeout(() => {
+        phraseEl.style.opacity = 0;
+      }, 2000);
     }
 
-    function showSuccess(text) {
-      if (successes.has(text)) return;
-      successes.add(text);
-      successEl.textContent = "Succès débloqué : " + text;
-      successEl.style.opacity = 1;
-      setTimeout(() => { successEl.style.opacity = 0; }, 3000);
-    }
-
-    function drawAura(x, y, r, color = 'rgba(255,255,255,0.15)') {
-      const gradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2.5);
+    function drawAura(x, y, r, color) {
+      const gradient = ctx.createRadialGradient(x, y, r, x, y, r * 2.5);
       gradient.addColorStop(0, color);
-      gradient.addColorStop(1, 'transparent');
+      gradient.addColorStop(1, "transparent");
       ctx.beginPath();
       ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
       ctx.fillStyle = gradient;
@@ -152,7 +104,7 @@
     }
 
     function drawCircle(e) {
-      const auraColor = (powerActive && e === player) ? 'rgba(255,255,100,0.4)' : 'rgba(255,255,255,0.1)';
+      const auraColor = powerActive && e === player ? "rgba(255,255,100,0.4)" : "rgba(255,255,255,0.1)";
       drawAura(e.x, e.y, e.radius, auraColor);
       ctx.beginPath();
       ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
@@ -167,22 +119,11 @@
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
-    function moveWanderer(bot) {
-      bot.x += Math.cos(bot.angle) * bot.speed;
-      bot.y += Math.sin(bot.angle) * bot.speed;
-      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
-    }
-
-    function spawnFragments() {
+    function spawnFragment() {
       const rand = Math.random();
-      let color = '#ff0055';
-      let trap = false;
-      let rare = false;
-      if (rand < 0.05) {
-        color = '#ffff66'; rare = true;
-      } else if (rand < 0.3) {
-        color = '#00ffff'; trap = true;
-      }
+      let color = "#ff0055", trap = false, rare = false;
+      if (rand < 0.05) { color = "#ffff66"; rare = true; }
+      else if (rand < 0.35) { color = "#00ffff"; trap = true; }
       fragments.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -199,16 +140,15 @@
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: 20 + Math.random() * 10,
-        color: isHunter ? '#9933ff' : '#00ccff',
+        color: isHunter ? "#9933ff" : "#00ccff",
         speed: isHunter ? 1.4 : 0.6,
-        type: isHunter ? 'hunter' : 'wanderer',
+        type: isHunter ? "hunter" : "wanderer",
         angle: Math.random() * 2 * Math.PI
       });
     }
         function repelBots() {
       bots.forEach(bot => {
-        const d = distance(player, bot);
-        if (d < 250) {
+        if (distance(player, bot) < 250) {
           const dx = bot.x - player.x;
           const dy = bot.y - player.y;
           const dist = Math.hypot(dx, dy);
@@ -227,28 +167,27 @@
 
     function startPower() {
       powerActive = true;
-      powerButton.style.display = 'block';
+      powerButton.style.display = "block";
       showPhrase("Un pouvoir ancien s'éveille...");
-      showSuccess("Premier pouvoir absorbé");
       if (powerTimeout) clearTimeout(powerTimeout);
       powerTimeout = setTimeout(() => {
         powerActive = false;
-        powerButton.style.display = 'none';
+        powerButton.style.display = "none";
       }, 2000);
     }
 
+    function moveWanderer(bot) {
+      bot.x += Math.cos(bot.angle) * bot.speed;
+      bot.y += Math.sin(bot.angle) * bot.speed;
+      if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
+    }
+
     function updateGame() {
-      if (!gameRunning) return;
-
-      timeAlive++;
-      if (timeAlive === 1800) showSuccess("Tu as survécu 30 secondes");
-      if (timeAlive === 3600) showSuccess("Tu as survécu 1 minute");
-
       player.x += (mouse.x - player.x) * 0.08;
       player.y += (mouse.y - player.y) * 0.08;
 
       bots.forEach(bot => {
-        if (bot.type === 'hunter') {
+        if (bot.type === "hunter") {
           const dx = player.x - bot.x;
           const dy = player.y - bot.y;
           const dist = Math.hypot(dx, dy);
@@ -263,26 +202,26 @@
 
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
-          if (f.rare) {
-            startPower();
-          } else if (f.trap) {
+          if (f.rare) startPower();
+          else if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
             if (Math.random() < 0.5) showPhrase("Un fragment piégé...");
           } else {
             player.radius += 1;
-            if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
+            if (Math.random() < 0.4) showPhrase("Un souvenir oublié...");
           }
-          spawnFragments(); // un nouveau fragment à chaque fois
+          spawnFragment(); // remplacer immédiatement
           return false;
         }
         return true;
       });
 
       for (let bot of bots) {
-        if (bot.type === 'wanderer') {
+        if (bot.type === "wanderer") {
           fragments = fragments.filter(f => {
             if (distance(f, bot) < bot.radius + f.radius) {
               bot.radius += 0.5;
+              spawnFragment();
               return false;
             }
             return true;
@@ -291,13 +230,9 @@
       }
 
       bots = bots.filter(bot => {
-        if (distance(player, bot) < player.radius + bot.radius) {
+        if (bot.type === "hunter" && distance(player, bot) < player.radius + bot.radius) {
           if (player.radius > bot.radius) {
             player.radius += bot.radius / 2;
-            absorbedBots++;
-            if (absorbedBots === 5) showSuccess("5 bots absorbés");
-            progressBar.style.width = (absorbedBots / targetAbsorbed * 100) + '%';
-            showPhrase("L'un des leurs a chuté...");
             return false;
           } else {
             alert("Tu as été absorbé...");
@@ -314,21 +249,7 @@
       drawCircle(player);
 
       frame++;
-      if (frame % 180 === 0) spawnFragments();
       if (frame % 600 === 0) spawnBot();
-      if (frame % 1800 === 0) botsToSpawn++;
-
-      for (let i = 0; i < botsToSpawn; i++) {
-        if (frame % (3000 + i * 200) === 0) spawnBot();
-      }
-
-      if (absorbedBots >= targetAbsorbed) {
-        alert("Tu as triomphé des entités du rêve...");
-        showSuccess("Tu as atteint l'éveil");
-        resetGame();
-        return;
-      }
-
       requestAnimationFrame(updateGame);
     }
 
@@ -337,30 +258,25 @@
       fragments = [];
       bots = [];
       frame = 0;
-      absorbedBots = 0;
-      timeAlive = 0;
-      botsToSpawn = 4;
-      gameRunning = true;
       powerActive = false;
-      powerButton.style.display = 'none';
-      progressBar.style.width = '0%';
-      spawnFragments();
-      for (let i = 0; i < botsToSpawn; i++) spawnBot();
+      powerButton.style.display = "none";
+      for (let i = 0; i < 10; i++) spawnFragment();
+      for (let i = 0; i < 4; i++) spawnBot();
       updateGame();
     }
 
-    canvas.addEventListener('mousemove', e => {
+    canvas.addEventListener("mousemove", e => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     });
-    canvas.addEventListener('touchmove', e => {
+    canvas.addEventListener("touchmove", e => {
       if (e.touches.length > 0) {
         mouse.x = e.touches[0].clientX;
         mouse.y = e.touches[0].clientY;
       }
     }, { passive: false });
 
-    powerButton.addEventListener('click', activatePower);
+    powerButton.addEventListener("click", activatePower);
     resetGame();
   </script>
 </body>
