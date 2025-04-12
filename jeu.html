@@ -107,6 +107,14 @@
     let absorbedBots = 0;
     const targetAbsorbed = 10;
 
+    const phrases = [
+      "Un souvenir oublié...",
+      "Une étincelle s’éveille...",
+      "L’un des leurs a chuté...",
+      "Le rêve devient lucide...",
+      "Tu grandis dans l’ombre..."
+    ];
+
     function showPhrase(text) {
       phraseEl.textContent = text;
       phraseEl.style.opacity = 1;
@@ -116,7 +124,7 @@
     }
 
     function drawAura(x, y, r, color) {
-      const gradient = ctx.createRadialGradient(x, y, r, x, y, r * 2.5);
+      const gradient = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.5);
       gradient.addColorStop(0, color);
       gradient.addColorStop(1, "transparent");
       ctx.beginPath();
@@ -205,8 +213,8 @@
     }
 
     function updateGame() {
-      player.x += (mouse.x - player.x) * 0.08;
-      player.y += (mouse.y - player.y) * 0.08;
+      player.x += (mouse.x - player.x) * 0.1;
+      player.y += (mouse.y - player.y) * 0.1;
 
       bots.forEach(bot => {
         if (bot.type === "hunter") {
@@ -230,9 +238,9 @@
             if (Math.random() < 0.5) showPhrase("Un fragment piégé...");
           } else {
             player.radius += 1;
-            if (Math.random() < 0.4) showPhrase("Un souvenir oublié...");
+            if (Math.random() < 0.4) showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
-          spawnFragment(); // remplacement immédiat
+          spawnFragment(); // remplacer immédiatement
           return false;
         }
         return true;
@@ -257,7 +265,7 @@
             player.radius += bot.radius / 2;
             absorbedBots++;
             progressBar.style.width = (absorbedBots / targetAbsorbed * 100) + "%";
-            showPhrase("L'un des leurs a chuté...");
+            showPhrase("L’un des leurs a chuté...");
             return false;
           } else {
             alert("Tu as été absorbé...");
