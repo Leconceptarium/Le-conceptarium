@@ -51,13 +51,14 @@
     let frame = 0;
 
     function spawnFragments() {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 25; i++) {
+        const isTrap = Math.random() < 0.1;
         fragments.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           radius: 6,
-          color: Math.random() < 0.15 ? '#00ffff' : '#ff0055',
-          trap: Math.random() < 0.15
+          color: isTrap ? '#00ffff' : '#ff0055',
+          trap: isTrap
         });
       }
     }
