@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sanctuaire Mystique</title>
+  <title>Le Sanctuaire du Rêveur</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap');
     html, body {
@@ -27,25 +27,67 @@
       pointer-events: none;
       text-shadow: 0 0 10px #ff00cc;
     }
+    #progress {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      overflow: hidden;
+      z-index: 15;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, #ff00cc, #00ffff);
+      transition: width 0.3s ease;
+    }
+    #phrase {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 18px;
+      text-shadow: 0 0 10px #ff00cc;
+      z-index: 15;
+      opacity: 0;
+      transition: opacity 1s;
+    }
   </style>
 </head>
 <body>
   <h1>Le Sanctuaire du Rêveur</h1>
+  <div id="progress"><div id="progress-bar"></div></div>
+  <div id="phrase"></div>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const progressBar = document.getElementById('progress-bar');
+    const phraseEl = document.getElementById('phrase');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    const phrases = [
+      "Un souvenir oublié...",
+      "Une étincelle s'éveille...",
+      "L'un des leurs a chuté...",
+      "Tu grandis dans l'ombre...",
+      "Le rêve devient lucide..."
+    ];
 
     let player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
       radius: 15,
-      color: '#ffffff',
-      speed: 3.2
+      color: '#ffffff'
     };
 
+    let mouse = { x: player.x, y: player.y };
     let fragments = [];
     let bots = [];
     let frame = 0;
@@ -79,7 +121,18 @@
       });
     }
 
+    function drawAura(x, y, r) {
+      const gradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2);
+      gradient.addColorStop(0, 'rgba(255,255,255,0.15)');
+      gradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
     function drawCircle(e) {
+      drawAura(e.x, e.y, e.radius);
       ctx.beginPath();
       ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
       ctx.fillStyle = e.color;
@@ -88,19 +141,8 @@
       ctx.fill();
       ctx.shadowBlur = 0;
     }
-
-    function distance(a, b) {
+        function distance(a, b) {
       return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    function moveToward(e, target, speed) {
-      const dx = target.x - e.x;
-      const dy = target.y - e.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > 0) {
-        e.x += (dx / dist) * speed;
-        e.y += (dy / dist) * speed;
-      }
     }
 
     function moveWanderer(bot) {
@@ -109,21 +151,28 @@
       if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
     }
 
-    function drawGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      fragments.forEach(drawCircle);
-      bots.forEach(drawCircle);
-      drawCircle(player);
+    function showPhrase(text) {
+      phraseEl.textContent = text;
+      phraseEl.style.opacity = 1;
+      setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
     }
 
     function updateGame() {
       if (!gameRunning) return;
 
-      moveToward(player, mouse, player.speed);
+      // Lissage fluide
+      player.x += (mouse.x - player.x) * 0.08;
+      player.y += (mouse.y - player.y) * 0.08;
 
       bots.forEach(bot => {
         if (bot.type === 'hunter') {
-          moveToward(bot, player, bot.speed);
+          const dx = player.x - bot.x;
+          const dy = player.y - bot.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0) {
+            bot.x += (dx / dist) * bot.speed;
+            bot.y += (dy / dist) * bot.speed;
+          }
         } else {
           moveWanderer(bot);
         }
@@ -133,8 +182,10 @@
         if (distance(f, player) < player.radius + f.radius) {
           if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
+            showPhrase("Un fragment piégé...");
           } else {
             player.radius += 1;
+            showPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
           }
           return false;
         }
@@ -158,6 +209,8 @@
           if (player.radius > bot.radius) {
             player.radius += bot.radius / 2;
             absorbedBots++;
+            progressBar.style.width = (absorbedBots / targetAbsorbed * 100) + '%';
+            showPhrase("L'un des leurs a chuté...");
             return false;
           } else {
             alert("Tu as été absorbé...");
@@ -168,7 +221,10 @@
         return true;
       });
 
-      drawGame();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fragments.forEach(drawCircle);
+      bots.forEach(drawCircle);
+      drawCircle(player);
 
       frame++;
       if (frame % 500 === 0) spawnFragments();
@@ -190,12 +246,12 @@
       frame = 0;
       absorbedBots = 0;
       gameRunning = true;
+      progressBar.style.width = '0%';
       spawnFragments();
       for (let i = 0; i < 4; i++) spawnBot();
       updateGame();
     }
 
-    let mouse = { x: player.x, y: player.y };
     canvas.addEventListener('mousemove', e => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
