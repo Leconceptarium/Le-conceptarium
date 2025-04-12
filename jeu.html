@@ -79,7 +79,7 @@
       y: canvas.height / 2,
       radius: 15,
       color: "#ffffff",
-      speed: 130 // px/sec
+      speed: 135 // px/sec
     };
 
     let mouse = { x: player.x, y: player.y };
@@ -216,7 +216,7 @@
             if (f.trap) {
               bot.radius = Math.max(10, bot.radius / 2);
             } else {
-              bot.radius += 0.4;
+              bot.radius += 0.6;
             }
             spawnFragment();
             return false;
