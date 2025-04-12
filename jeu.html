@@ -172,9 +172,8 @@
         y: Math.random() * canvas.height,
         radius: 20 + Math.random() * 10,
         color: isHunter ? "#9933ff" : "#00ccff",
-        speed: isHunter ? 1.6 : 1.2,
-        type: isHunter ? "hunter" : "wanderer",
-        angle: Math.random() * 2 * Math.PI
+        speed: 2.2,
+        type: isHunter ? "hunter" : "wanderer"
       });
     }
         function repelBots() {
@@ -199,17 +198,26 @@
         if (bot.type === "hunter") {
           moveToward(bot, player, bot.speed);
         } else {
-          bot.x += Math.cos(bot.angle) * bot.speed;
-          bot.y += Math.sin(bot.angle) * bot.speed;
-          if (Math.random() < 0.01) bot.angle += (Math.random() - 0.5);
+          // bots errants visent les fragments
+          let closest = null;
+          let minDist = Infinity;
+          fragments.forEach(f => {
+            const d = distance(bot, f);
+            if (d < minDist) {
+              minDist = d;
+              closest = f;
+            }
+          });
+          if (closest) moveToward(bot, closest, bot.speed);
         }
       });
 
+      // joueur mange fragments
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
           if (f.rare) {
             powerActive = true;
-            powerTimer = 120;
+            powerTimer = 240; // 4 secondes
             showPhrase("Un pouvoir ancien s’éveille...");
           } else if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
@@ -224,6 +232,7 @@
         return true;
       });
 
+      // bots mangent fragments
       for (let bot of bots) {
         fragments = fragments.filter(f => {
           if (distance(f, bot) < bot.radius + f.radius) {
@@ -239,10 +248,9 @@
         });
       }
 
-      // Minimum de fragments
       while (fragments.length < 10) spawnFragment();
 
-      // Collisions avec bots
+      // collision joueur vs bots
       bots = bots.filter(bot => {
         const isTouching = distance(player, bot) < player.radius + bot.radius;
         if (isTouching) {
@@ -266,7 +274,6 @@
       bots.forEach(drawCircle);
       drawCircle(player);
 
-      // Onde de choc visuelle et effet
       if (powerActive) {
         drawShockwave(player.x, player.y, player.radius + (Math.random() * 20 + 40));
         repelBots();
