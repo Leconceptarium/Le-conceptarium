@@ -27,14 +27,36 @@
       pointer-events: none;
       text-shadow: 0 0 10px #ff00cc;
     }
+    #restartBtn {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 30px;
+      font-size: 20px;
+      background: #ff00cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 20;
+      box-shadow: 0 0 20px #ff00cc;
+    }
+    #restartBtn:hover {
+      background: #e000b5;
+    }
   </style>
 </head>
 <body>
   <h1>Le Sanctuaire du Rêveur</h1>
+  <button id="restartBtn">Réveiller à nouveau</button>
   <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const restartBtn = document.getElementById('restartBtn');
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -43,12 +65,13 @@
       y: canvas.height / 2,
       radius: 15,
       color: '#ffffff',
-      speed: 3.2
+      speed: 3.5
     };
 
     let fragments = [];
     let bots = [];
     let frame = 0;
+    let gameRunning = true;
 
     function spawnFragments() {
       for (let i = 0; i < 25; i++) {
@@ -69,7 +92,7 @@
         y: Math.random() * canvas.height,
         radius: 25 + Math.random() * 10,
         color: '#9933ff',
-        speed: 1.0 + Math.random() * 0.8
+        speed: 0.8 + Math.random() * 0.6
       });
     }
 
@@ -105,6 +128,8 @@
     }
 
     function updateGame() {
+      if (!gameRunning) return;
+
       moveToward(player, mouse, player.speed);
       bots.forEach(bot => moveToward(bot, player, bot.speed));
 
@@ -136,8 +161,7 @@
             player.radius += bot.radius / 2;
             bot.radius = 0;
           } else {
-            alert("Tu as été absorbé par une entité onirique...");
-            resetGame();
+            gameOver();
             return;
           }
         }
@@ -153,14 +177,24 @@
       requestAnimationFrame(updateGame);
     }
 
+    function gameOver() {
+      gameRunning = false;
+      restartBtn.style.display = 'block';
+    }
+
     function resetGame() {
       player.radius = 15;
       fragments = [];
       bots = [];
       frame = 0;
+      gameRunning = true;
+      restartBtn.style.display = 'none';
       spawnFragments();
       for (let i = 0; i < 3; i++) spawnBot();
+      updateGame();
     }
+
+    restartBtn.addEventListener('click', resetGame);
 
     let mouse = { x: player.x, y: player.y };
     canvas.addEventListener('mousemove', e => {
@@ -175,7 +209,6 @@
     }, { passive: false });
 
     resetGame();
-    updateGame();
   </script>
 </body>
 </html>
