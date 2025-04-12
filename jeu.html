@@ -112,7 +112,8 @@
     let absorbedBots = 0;
     const targetAbsorbed = 10;
     let gameRunning = true;
-    let hasPower = false;
+    let powerActive = false;
+    let powerTimeout = null;
 
     function spawnFragments() {
       for (let i = 0; i < 15; i++) {
@@ -121,10 +122,10 @@
         let trap = false;
         let rare = false;
         if (rand < 0.05) {
-          color = '#ffff66'; // fragment rare
+          color = '#ffff66'; // rare
           rare = true;
         } else if (rand < 0.15) {
-          color = '#00ffff'; // fragment piégé
+          color = '#00ffff'; // piégé
           trap = true;
         }
         fragments.push({
@@ -151,9 +152,9 @@
       });
     }
 
-    function drawAura(x, y, r) {
+    function drawAura(x, y, r, color = 'rgba(255,255,255,0.15)') {
       const gradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2);
-      gradient.addColorStop(0, 'rgba(255,255,255,0.15)');
+      gradient.addColorStop(0, color);
       gradient.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(x, y, r * 2, 0, Math.PI * 2);
@@ -162,7 +163,8 @@
     }
 
     function drawCircle(e) {
-      drawAura(e.x, e.y, e.radius);
+      const auraColor = (powerActive && e === player) ? 'rgba(255,255,100,0.4)' : 'rgba(255,255,255,0.15)';
+      drawAura(e.x, e.y, e.radius, auraColor);
       ctx.beginPath();
       ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
       ctx.fillStyle = e.color;
@@ -187,9 +189,7 @@
       setTimeout(() => { phraseEl.style.opacity = 0; }, 2000);
     }
 
-    function activatePower() {
-      powerButton.style.display = 'none';
-      hasPower = false;
+    function repelBots() {
       bots.forEach(bot => {
         const d = distance(player, bot);
         if (d < 150) {
@@ -202,6 +202,22 @@
           }
         }
       });
+    }
+
+    function activatePower() {
+      if (!powerActive) return;
+      repelBots();
+    }
+
+    function startPower() {
+      powerActive = true;
+      powerButton.style.display = 'block';
+      showPhrase("Un pouvoir ancien s'éveille...");
+      if (powerTimeout) clearTimeout(powerTimeout);
+      powerTimeout = setTimeout(() => {
+        powerActive = false;
+        powerButton.style.display = 'none';
+      }, 2000);
     }
 
     function updateGame() {
@@ -227,9 +243,7 @@
       fragments = fragments.filter(f => {
         if (distance(f, player) < player.radius + f.radius) {
           if (f.rare) {
-            hasPower = true;
-            powerButton.style.display = 'block';
-            showPhrase("Un pouvoir ancien s'éveille...");
+            startPower();
           } else if (f.trap) {
             player.radius = Math.max(10, player.radius / 2);
             if (Math.random() < 0.5) showPhrase("Un fragment piégé...");
@@ -296,7 +310,7 @@
       frame = 0;
       absorbedBots = 0;
       gameRunning = true;
-      hasPower = false;
+      powerActive = false;
       powerButton.style.display = 'none';
       progressBar.style.width = '0%';
       spawnFragments();
