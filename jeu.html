@@ -263,16 +263,18 @@
 }
 
       for (let i = 0; i < bots.length; i++) {
-        for (let j = i + 1; j < bots.length; j++) {
-          const a = bots[i], b = bots[j];
-          if (distance(a, b) < a.radius + b.radius && a.type !== b.type) {
-            let violet = a.type === "hunter" ? a : b;
-            let bleu = a.type === "wanderer" ? a : b;
-            if (bleu.radius > violet.radius) bleu.radius += violet.radius * 0.75;
-            violet.radius = Math.max(10, violet.radius * 0.5);
-          }
-        }
+  for (let j = i + 1; j < bots.length; j++) {
+    const a = bots[i], b = bots[j];
+    if (distance(a, b) < a.radius + b.radius && a.type !== b.type) {
+      let violet = a.type === "hunter" ? a : b;
+      let bleu = a.type === "wanderer" ? a : b;
+      if (bleu.radius > violet.radius) {
+        bleu.radius += Math.min(8, violet.radius * 0.3); // croissance limitée
       }
+      violet.radius = Math.max(10, violet.radius * 0.5);
+    }
+  }
+}
 
       while (fragments.length < 10) spawnFragment();
 
