@@ -73,6 +73,7 @@
     const progressBar = document.getElementById("progress-bar");
 
     let lastTime = performance.now();
+    let frameTimer = 0;
 
     const player = {
       x: canvas.width / 2,
@@ -137,11 +138,12 @@
         y: Math.random() * canvas.height,
         radius: 20 + Math.random() * 10,
         color: isHunter ? "#9933ff" : "#00ccff",
-        speed: isHunter ? 100 : 130, // px/sec
+        speed: isHunter ? 100 : 130,
         type: isHunter ? "hunter" : "wanderer"
       });
     }
-        function repelBots(delta) {
+
+    function repelBots(delta) {
       bots.forEach(bot => {
         const d = distance(player, bot);
         if (d < 200) {
@@ -167,18 +169,16 @@
     function gameLoop(now) {
       const delta = (now - lastTime) / 1000;
       lastTime = now;
+      frameTimer += delta;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // joueur
       moveTowardFixed(player, mouse, player.speed, delta);
 
-      // bots
       bots.forEach(bot => {
         if (bot.type === "hunter") {
           moveTowardFixed(bot, player, bot.speed, delta);
         } else {
-          // errant : cherche fragment le plus proche
           let closest = null;
           let minDist = Infinity;
           fragments.forEach(frag => {
@@ -192,7 +192,6 @@
         }
       });
 
-      // fragments mangés par le joueur
       fragments = fragments.filter(f => {
         if (distance(player, f) < player.radius + f.radius) {
           if (f.rare) {
@@ -209,15 +208,10 @@
         return true;
       });
 
-      // fragments mangés par les bots
       for (let bot of bots) {
         fragments = fragments.filter(f => {
           if (distance(bot, f) < bot.radius + f.radius) {
-            if (f.trap) {
-              bot.radius = Math.max(10, bot.radius / 2);
-            } else {
-              bot.radius += 0.6;
-            }
+            bot.radius += f.trap ? -0.6 : 0.6;
             spawnFragment();
             return false;
           }
@@ -227,10 +221,8 @@
 
       while (fragments.length < 10) spawnFragment();
 
-      // collisions joueur vs bots
       bots = bots.filter(bot => {
-        const isTouching = distance(player, bot) < player.radius + bot.radius;
-        if (isTouching) {
+        if (distance(player, bot) < player.radius + bot.radius) {
           if (player.radius > bot.radius) {
             player.radius += bot.radius / 2;
             absorbedBots++;
@@ -245,7 +237,6 @@
         return true;
       });
 
-      // affichage
       fragments.forEach(drawCircle);
       bots.forEach(drawCircle);
       drawCircle(player);
@@ -255,6 +246,12 @@
         repelBots(delta);
         powerTimer -= delta;
         if (powerTimer <= 0) powerActive = false;
+      }
+
+      // Nouveau bot toutes les 3 secondes
+      if (frameTimer >= 3) {
+        spawnBot();
+        frameTimer = 0;
       }
 
       requestAnimationFrame(gameLoop);
@@ -267,6 +264,7 @@
       absorbedBots = 0;
       powerActive = false;
       powerTimer = 0;
+      frameTimer = 0;
       progressBar.style.width = "0%";
       for (let i = 0; i < 10; i++) spawnFragment();
       for (let i = 0; i < 4; i++) spawnBot();
@@ -278,6 +276,7 @@
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     });
+
     canvas.addEventListener("touchmove", e => {
       if (e.touches.length > 0) {
         mouse.x = e.touches[0].clientX;
