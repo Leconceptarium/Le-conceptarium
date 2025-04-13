@@ -244,15 +244,23 @@
       });
 
       for (let bot of bots) {
-        fragments = fragments.filter(f => {
-          if (distance(bot, f) < bot.radius + f.radius) {
-            bot.radius += f.trap ? -0.6 : 0.6;
-            spawnFragment();
-            return false;
-          }
-          return true;
-        });
+  fragments = fragments.filter(f => {
+    if (distance(bot, f) < bot.radius + f.radius) {
+      if (f.trap) {
+        if (bot.type === "hunter") {
+          bot.radius = Math.max(10, bot.radius * 0.5); // Les violets se divisent
+        } else {
+          bot.radius = Math.max(10, bot.radius / 2);   // Les bleus rétrécissent
+        }
+      } else {
+        bot.radius += 0.6;
       }
+      spawnFragment();
+      return false;
+    }
+    return true;
+  });
+}
 
       for (let i = 0; i < bots.length; i++) {
         for (let j = i + 1; j < bots.length; j++) {
