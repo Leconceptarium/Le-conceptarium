@@ -80,7 +80,7 @@
       y: canvas.height / 2,
       radius: 15,
       color: "#ffffff",
-      speed: 135 // px/sec
+      speed: 135
     };
 
     let mouse = { x: player.x, y: player.y };
@@ -133,17 +133,33 @@
 
     function spawnBot() {
       const isHunter = Math.random() < 0.5;
+      const margin = 10;
+      let x, y;
+      const edge = Math.floor(Math.random() * 4);
+      if (edge === 0) { // gauche
+        x = -margin;
+        y = Math.random() * canvas.height;
+      } else if (edge === 1) { // droite
+        x = canvas.width + margin;
+        y = Math.random() * canvas.height;
+      } else if (edge === 2) { // haut
+        x = Math.random() * canvas.width;
+        y = -margin;
+      } else { // bas
+        x = Math.random() * canvas.width;
+        y = canvas.height + margin;
+      }
+
       bots.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+        x,
+        y,
         radius: 20 + Math.random() * 10,
         color: isHunter ? "#9933ff" : "#00ccff",
         speed: isHunter ? 100 : 130,
         type: isHunter ? "hunter" : "wanderer"
       });
     }
-
-    function repelBots(delta) {
+        function repelBots(delta) {
       bots.forEach(bot => {
         const d = distance(player, bot);
         if (d < 200) {
@@ -192,6 +208,7 @@
         }
       });
 
+      // joueur mange des fragments
       fragments = fragments.filter(f => {
         if (distance(player, f) < player.radius + f.radius) {
           if (f.rare) {
@@ -208,6 +225,7 @@
         return true;
       });
 
+      // bots mangent des fragments
       for (let bot of bots) {
         fragments = fragments.filter(f => {
           if (distance(bot, f) < bot.radius + f.radius) {
@@ -217,6 +235,23 @@
           }
           return true;
         });
+      }
+
+      // interaction violet/bleu
+      for (let i = 0; i < bots.length; i++) {
+        for (let j = i + 1; j < bots.length; j++) {
+          const a = bots[i], b = bots[j];
+          if (distance(a, b) < a.radius + b.radius) {
+            if (a.type !== b.type) {
+              let violet = a.type === "hunter" ? a : b;
+              let bleu = a.type === "wanderer" ? a : b;
+              if (bleu.radius > violet.radius) {
+                bleu.radius += 1;
+              }
+              violet.radius = Math.max(10, violet.radius - 1);
+            }
+          }
+        }
       }
 
       while (fragments.length < 10) spawnFragment();
@@ -248,7 +283,6 @@
         if (powerTimer <= 0) powerActive = false;
       }
 
-      // Nouveau bot toutes les 3 secondes
       if (frameTimer >= 3) {
         spawnBot();
         frameTimer = 0;
