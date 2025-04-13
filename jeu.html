@@ -169,30 +169,21 @@
       const margin = 10;
       let x, y;
       const edge = Math.floor(Math.random() * 4);
-      if (edge === 0) {
-        x = -margin;
-        y = Math.random() * canvas.height;
-      } else if (edge === 1) {
-        x = canvas.width + margin;
-        y = Math.random() * canvas.height;
-      } else if (edge === 2) {
-        x = Math.random() * canvas.width;
-        y = -margin;
-      } else {
-        x = Math.random() * canvas.width;
-        y = canvas.height + margin;
-      }
+      if (edge === 0) { x = -margin; y = Math.random() * canvas.height; }
+      else if (edge === 1) { x = canvas.width + margin; y = Math.random() * canvas.height; }
+      else if (edge === 2) { x = Math.random() * canvas.width; y = -margin; }
+      else { x = Math.random() * canvas.width; y = canvas.height + margin; }
 
       bots.push({
-        x,
-        y,
+        x, y,
         radius: 20 + Math.random() * 10,
         color: isHunter ? "#9933ff" : "#00ccff",
         speed: isHunter ? 100 : 130,
         type: isHunter ? "hunter" : "wanderer"
       });
     }
-        function repelBots(delta) {
+
+    function repelBots(delta) {
       bots.forEach(bot => {
         const d = distance(player, bot);
         if (d < 200) {
@@ -221,7 +212,6 @@
       frameTimer += delta;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (gameWon) return;
 
       moveTowardFixed(player, mouse, player.speed, delta);
@@ -230,13 +220,12 @@
         if (bot.type === "hunter") {
           moveTowardFixed(bot, player, bot.speed, delta);
         } else {
-          let closest = null;
-          let minDist = Infinity;
-          fragments.forEach(frag => {
-            const d = distance(bot, frag);
+          let closest = null, minDist = Infinity;
+          fragments.forEach(f => {
+            const d = distance(bot, f);
             if (d < minDist) {
               minDist = d;
-              closest = frag;
+              closest = f;
             }
           });
           if (closest) moveTowardFixed(bot, closest, bot.speed, delta);
@@ -245,14 +234,9 @@
 
       fragments = fragments.filter(f => {
         if (distance(player, f) < player.radius + f.radius) {
-          if (f.rare) {
-            powerActive = true;
-            powerTimer = 4;
-          } else if (f.trap) {
-            player.radius = Math.max(10, player.radius / 2);
-          } else {
-            player.radius += 1;
-          }
+          if (f.rare) { powerActive = true; powerTimer = 4; }
+          else if (f.trap) player.radius = Math.max(10, player.radius / 2);
+          else player.radius += 1;
           spawnFragment();
           return false;
         }
@@ -273,15 +257,11 @@
       for (let i = 0; i < bots.length; i++) {
         for (let j = i + 1; j < bots.length; j++) {
           const a = bots[i], b = bots[j];
-          if (distance(a, b) < a.radius + b.radius) {
-            if (a.type !== b.type) {
-              let violet = a.type === "hunter" ? a : b;
-              let bleu = a.type === "wanderer" ? a : b;
-              if (bleu.radius > violet.radius) {
-                bleu.radius += violet.radius * 0.75;
-              }
-              violet.radius = Math.max(10, violet.radius * 0.5);
-            }
+          if (distance(a, b) < a.radius + b.radius && a.type !== b.type) {
+            let violet = a.type === "hunter" ? a : b;
+            let bleu = a.type === "wanderer" ? a : b;
+            if (bleu.radius > violet.radius) bleu.radius += violet.radius * 0.75;
+            violet.radius = Math.max(10, violet.radius * 0.5);
           }
         }
       }
@@ -337,4 +317,28 @@
       powerTimer = 0;
       frameTimer = 0;
       gameWon = false;
-      victory
+      victoryMessage.style.display = "none";
+      progressBar.style.width = "0%";
+      for (let i = 0; i < 10; i++) spawnFragment();
+      for (let i = 0; i < 4; i++) spawnBot();
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+
+    canvas.addEventListener("mousemove", e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    canvas.addEventListener("touchmove", e => {
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    }, { passive: false });
+
+    // LANCE LE JEU
+    resetGame();
+  </script>
+</body>
+</html>
