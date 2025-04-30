@@ -94,6 +94,56 @@
     <h1>Nos projets immersifs</h1>
     <p style="text-align:center;">Chaque expérience est une passerelle entre le réel et l’imaginaire.</p>
 
+    <section class="projet">
+  <h2>Entrées Rêvées : Une Relecture Émotionnelle</h2>
+  <p>
+    Créer une aventure immersive, c’est bien plus que divertir.<br>
+    C’est éveiller les sens, raconter une histoire dès les premiers instants… parfois même avant d’entrer.<br><br>
+    Dans cette démarche artistique, deux lieux emblématiques de mon enfance ont été réinterprétés :<br>
+    <strong>Fraispertuis-City</strong> et <strong>Le Parc du Petit Prince</strong>.<br><br>
+    À travers ces visuels réalisés sur Procreate, je propose une exploration de ce moment charnière : <em>l’entrée</em>.<br>
+    Car elle est souvent <em>la première image qui émerveille</em>, et <em>la dernière que l’on emporte avec soi</em>.
+  </p>
+
+  <div class="carousel">
+    <img src="img/IMG_3198.png" class="carousel-image active">
+    <img src="img/IMG_3199.png" class="carousel-image">
+  </div>
+</section>
+
+<style>
+.carousel {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 30px auto;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.carousel-image {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+.carousel-image.active {
+  opacity: 1;
+  position: relative;
+}
+</style>
+
+<script>
+let index = 0;
+const images = document.querySelectorAll('.carousel-image');
+
+setInterval(() => {
+  images[index].classList.remove('active');
+  index = (index + 1) % images.length;
+  images[index].classList.add('active');
+}, 4000);
+</script>
+    
     <section class="project">
       <h2>LA MALÉDICTION DE MONSIEUR BRISEBARD</h2>
       <div style="display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start;">
