@@ -87,52 +87,58 @@
     </nav>
   </header>
 
- <main class="contact-page">
-  <h1>Une idée ? Un projet ? Parlons-en.</h1>
-  <p class="intro">
-    Décrivez-moi votre univers, votre lieu, ou votre envie, et je vous recontacte rapidement.
-  </p>
+<main class="contact-clean">
+  <h1>Demande de projet</h1>
+  <p class="intro">Parlez-moi de votre idée, de votre lieu, ou de votre public. Je vous recontacte rapidement.</p>
 
-  <div class="contact-container">
-    <div class="form-section">
-      <form onsubmit="sendMail(event)" class="contact-form">
-        <label for="nom">Nom :</label>
-        <input type="text" id="nom" required />
-
-        <label for="email">Email :</label>
-        <input type="email" id="email" required />
-
-        <label for="sujet">Sujet du projet :</label>
-        <select id="sujet" required>
-          <option value="">Choisir un sujet</option>
-          <option value="Escape game">Escape game</option>
-          <option value="Scénario personnalisé">Scénario personnalisé</option>
-          <option value="Exposition">Exposition</option>
-          <option value="Autre">Autre</option>
-        </select>
-
-        <label for="budget">Budget estimé :</label>
-        <input type="text" id="budget" placeholder="Ex : 500 €, 2000 €, etc." />
-
-        <label for="deadline">Deadline souhaitée :</label>
-        <input type="date" id="deadline" />
-
-        <label for="message">Description du besoin :</label>
-        <textarea id="message" rows="6" required placeholder="Parlez-moi de votre idée, de votre lieu, de votre public..."></textarea>
-
-        <button type="submit" class="cta-button">Envoyer ma demande de projet</button>
-      </form>
+  <form onsubmit="sendMail(event)" class="form-grid">
+    <div class="form-group">
+      <label>Nom *</label>
+      <input type="text" id="nom" required />
     </div>
 
-    <div class="info-section">
-      <h2>Coordonnées</h2>
-      <p><strong>Email :</strong><br><a href="mailto:leconceptarium@gmail.com">leconceptarium@gmail.com</a></p>
-      <p><strong>Instagram :</strong><br><a href="https://www.instagram.com/leconceptarium" target="_blank">@leconceptarium</a></p>
-      <p><strong>Disponibilité :</strong><br>Lundi – Vendredi : 10h à 18h</p>
+    <div class="form-group">
+      <label>Email *</label>
+      <input type="email" id="email" required />
     </div>
+
+    <div class="form-group">
+      <label>Sujet du projet *</label>
+      <select id="sujet" required>
+        <option value="">Choisir un sujet</option>
+        <option value="Escape game">Escape game</option>
+        <option value="Scénario personnalisé">Scénario personnalisé</option>
+        <option value="Exposition">Exposition immersive</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Budget estimé</label>
+      <input type="text" id="budget" placeholder="Ex : 1000 €, 5000 €..." />
+    </div>
+
+    <div class="form-group">
+      <label>Deadline souhaitée</label>
+      <input type="date" id="deadline" />
+    </div>
+
+    <div class="form-group full">
+      <label>Description du besoin *</label>
+      <textarea id="message" rows="6" required placeholder="Décrivez le lieu, l’univers ou le type d’expérience souhaitée..."></textarea>
+    </div>
+
+    <div class="form-group full">
+      <button type="submit" class="cta-button">Envoyer ma demande de projet</button>
+    </div>
+  </form>
+
+  <div class="contact-extra">
+    <p><strong>Email :</strong> <a href="mailto:leconceptarium@gmail.com">leconceptarium@gmail.com</a></p>
+    <p><strong>Instagram :</strong> <a href="https://instagram.com/leconceptarium" target="_blank">@leconceptarium</a></p>
+    <p><strong>Disponibilité :</strong> Lundi – Vendredi : 10h à 18h</p>
   </div>
 </main>
-
   <footer>
     <img src="IMG_1929.PNG" alt="Logo" style="height: 50px;">
     <p>© 2025 Le Conceptarium – Tous droits réservés</p> 
