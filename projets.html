@@ -184,25 +184,27 @@
     <p>© 2025 Le Conceptarium – Tous droits réservés</p>
   </footer>
 
-    <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const burger = document.querySelector(".burger");
-    const nav = document.querySelector(".navbar nav");
-    burger.addEventListener("click", () => {
-      nav.classList.toggle("active");
-    });
+    <<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const burger = document.querySelector(".burger");
+  const nav = document.querySelector(".navbar nav");
+  burger.addEventListener("click", () => {
+    nav.classList.toggle("active");
+  });
 
-    document.querySelectorAll('.carousel-container').forEach(container => {
-      const images = container.querySelectorAll('.carousel-image');
-      const left = container.querySelector('.carousel-arrow.left');
-      const right = container.querySelector('.carousel-arrow.right');
-      let index = 0;
+  document.querySelectorAll('.carousel-container').forEach(container => {
+    const images = container.querySelectorAll('.carousel-image');
+    const left = container.querySelector('.carousel-arrow.left');
+    const right = container.querySelector('.carousel-arrow.right');
+    let index = 0;
 
-      function showImage(i) {
-        images.forEach(img => img.classList.remove('active'));
-        images[i].classList.add('active');
-      }
+    function showImage(i) {
+      images.forEach(img => img.classList.remove('active'));
+      images[i].classList.add('active');
+    }
 
+    // Si flèches présentes : navigation manuelle
+    if (left && right) {
       left.addEventListener('click', e => {
         e.stopPropagation();
         index = (index - 1 + images.length) % images.length;
@@ -214,24 +216,20 @@
         index = (index + 1) % images.length;
         showImage(index);
       });
+    }
 
-      showImage(index);
-    });
-  });
-</script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll('.auto-carousel').forEach(container => {
-      const images = container.querySelectorAll('.carousel-image');
-      let index = 0;
-
+    // Si container a la classe auto-carousel : défilement automatique
+    if (container.classList.contains('auto-carousel')) {
       setInterval(() => {
         images[index].classList.remove('active');
         index = (index + 1) % images.length;
         images[index].classList.add('active');
       }, 4000);
-    });
+    }
+
+    showImage(index);
   });
+});
 </script>
 </body>
 </html>
